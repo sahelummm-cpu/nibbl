@@ -602,3 +602,491 @@ function MiniHomePreview({ target, t }) {
 }
 const toB64 = (file) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.readAsDataURL(file); });
 const toDataUrl = (file) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+
+// ── Nibbl handoff design canvas (claude.ai/design export, embedded verbatim) ──
+// Renders the original design exactly as authored. Self-contained; does not affect the app above.
+const NIBBL_DESIGN_HTML = `<!-- ============ MASCOT / LOGO FRAME ============ -->
+<div style="position:absolute;left:80px;top:80px;width:600px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">Mascot · Logo</div>
+  <div style="background:#fff;border-radius:28px;box-shadow:0 1px 3px rgba(27,42,42,.06),0 18px 40px -24px rgba(27,42,42,.25);padding:40px">
+
+    <div style="display:flex;gap:32px;align-items:flex-end">
+      <!-- App icon on coral gradient -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+        <div style="width:188px;height:188px;border-radius:44px;background:linear-gradient(150deg,#FF8A5B 0%,#FF7A4D 38%,#E85F30 100%);box-shadow:0 18px 36px -10px rgba(232,95,48,.55),inset 0 2px 4px rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background:radial-gradient(120% 80% at 30% 12%,rgba(255,255,255,.35),transparent 55%)"></div>
+          <svg width="128" height="128" viewBox="0 0 120 120" style="position:relative;filter:drop-shadow(0 6px 10px rgba(120,30,0,.25))">
+            <!-- ears back -->
+            <path d="M30 44 L20 9 Q19 6 23 7 L56 28 Z" fill="#F4F0E8"/>
+            <path d="M90 44 L100 9 Q101 6 97 7 L64 28 Z" fill="#F4F0E8"/>
+            <path d="M33 42 L26 18 Q25.5 15.5 28.5 17 L50 30 Z" fill="#E85F30"/>
+            <path d="M87 42 L94 18 Q94.5 15.5 91.5 17 L70 30 Z" fill="#E85F30"/>
+            <!-- head -->
+            <path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 60 88 76 60 98 C32 76 24 60 24 42 Z" fill="#FBF7F0"/>
+            <path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 58 90 70 78 80 C70 70 66 64 60 64 C54 64 50 70 42 80 C30 70 24 58 24 42 Z" fill="#FDFAF4"/>
+            <!-- upper face mask coral -->
+            <path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 56 91 67 81 76 C73 66 67 61 60 61 C53 61 47 66 39 76 C29 67 24 56 24 42 Z" fill="#FFFFFF" opacity="0"/>
+            <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 55 90 65 80 74 C72 65 66 60 60 60 C54 60 48 65 40 74 C30 65 25 55 25 41 Z" fill="url(#foxCoral)"/>
+            <defs>
+              <linearGradient id="foxCoral" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A5B"/><stop offset="1" stop-color="#F26a3a"/></linearGradient>
+            </defs>
+            <!-- eyes -->
+            <ellipse cx="44" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/>
+            <circle cx="45.6" cy="46" r="1.5" fill="#fff"/>
+            <ellipse cx="76" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/>
+            <circle cx="77.6" cy="46" r="1.5" fill="#fff"/>
+            <!-- nose -->
+            <path d="M60 70 L53.5 63 Q60 60.5 66.5 63 Z" fill="#1B2A2A"/>
+            <path d="M60 70 L60 78" stroke="#1B2A2A" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.55">App Icon</div>
+      </div>
+
+      <!-- Monoline small mark + wordmark -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;gap:18px;align-items:center">
+          <div style="width:64px;height:64px;border-radius:18px;background:#FBF7F0;display:flex;align-items:center;justify-content:center;border:1px solid #EFE6D8">
+            <svg width="40" height="40" viewBox="0 0 120 120" fill="none" stroke="#E85F30" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M30 44 L21 12 L54 30"/><path d="M90 44 L99 12 L66 30"/>
+              <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 60 87 76 60 96 C33 76 25 60 25 41 Z"/>
+              <circle cx="45" cy="49" r="2.6" fill="#E85F30" stroke="none"/>
+              <circle cx="75" cy="49" r="2.6" fill="#E85F30" stroke="none"/>
+              <path d="M60 70 L54 64 M60 70 L66 64 M60 70 L60 78" stroke-width="5"/>
+            </svg>
+          </div>
+          <div style="width:64px;height:64px;border-radius:18px;background:#1B2A2A;display:flex;align-items:center;justify-content:center">
+            <svg width="40" height="40" viewBox="0 0 120 120" fill="none" stroke="#FBF7F0" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M30 44 L21 12 L54 30"/><path d="M90 44 L99 12 L66 30"/>
+              <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 60 87 76 60 96 C33 76 25 60 25 41 Z"/>
+              <circle cx="45" cy="49" r="2.6" fill="#FBF7F0" stroke="none"/>
+              <circle cx="75" cy="49" r="2.6" fill="#FBF7F0" stroke="none"/>
+              <path d="M60 70 L54 64 M60 70 L66 64 M60 70 L60 78" stroke-width="5"/>
+            </svg>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="40" height="40" viewBox="0 0 120 120" style="flex:none">
+            <path d="M30 44 L21 12 L54 30 Z" fill="#E85F30"/><path d="M90 44 L99 12 L66 30 Z" fill="#E85F30"/>
+            <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 60 87 76 60 96 C33 76 25 60 25 41 Z" fill="#FF7A4D"/>
+            <circle cx="45" cy="49" r="3.4" fill="#1B2A2A"/><circle cx="75" cy="49" r="3.4" fill="#1B2A2A"/>
+            <path d="M60 70 L54 64 Q60 62 66 64 Z" fill="#1B2A2A"/>
+          </svg>
+          <div style="font:800 38px 'Poppins';color:#1B2A2A;letter-spacing:-.02em">Nibbl<span style="color:#E85F30">.</span></div>
+        </div>
+        <div style="font:500 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.55;line-height:1.5">Monoline marks for small UI &amp; dark surfaces.<br>Wordmark in Poppins ExtraBold.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOKENS FRAME ============ -->
+<div style="position:absolute;left:740px;top:80px;width:560px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">Color · Type Tokens</div>
+  <div style="background:#fff;border-radius:28px;box-shadow:0 1px 3px rgba(27,42,42,.06),0 18px 40px -24px rgba(27,42,42,.25);padding:36px">
+    <div style="font:700 13px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em;margin-bottom:16px">CORE</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:14px;background:#FBF7F0;border:1px solid #EFE6D8"></div><div><div style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A">Base</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#FBF7F0</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:14px;background:#1B2A2A"></div><div><div style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A">Ink</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#1B2A2A</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px;grid-column:1/3"><div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#FF7A4D,#E85F30)"></div><div><div style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A">Coral / Primary</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#FF7A4D → #E85F30</div></div></div>
+    </div>
+    <div style="font:700 13px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em;margin-bottom:16px">MACROS</div>
+    <div style="display:flex;gap:14px;margin-bottom:30px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:44px;border-radius:14px;background:#F2545B"></div><div style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Protein</div><div style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#F2545B</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:44px;border-radius:14px;background:#F2A03D"></div><div style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Carbs</div><div style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#F2A03D</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:44px;border-radius:14px;background:#4DA8F0"></div><div style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Fat</div><div style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">#4DA8F0</div></div>
+    </div>
+    <div style="font:700 13px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em;margin-bottom:16px">TYPE</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #F0EAdF;padding-bottom:14px"><div style="font:800 44px 'Poppins';color:#1B2A2A;letter-spacing:-.03em">1,847</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;text-align:right">Poppins ExtraBold<br>Display / Numerals</div></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #F0EAdF;padding-bottom:14px"><div style="font:700 24px 'Poppins';color:#1B2A2A">Today's Log</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">Poppins Bold · Headings</div></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font:500 15px 'Plus Jakarta Sans';color:#1B2A2A">Grilled chicken bowl</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">Jakarta Sans · Body</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMPONENTS FRAME ============ -->
+<div style="position:absolute;left:1360px;top:80px;width:600px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">Components</div>
+  <div style="background:#fff;border-radius:28px;box-shadow:0 1px 3px rgba(27,42,42,.06),0 18px 40px -24px rgba(27,42,42,.25);padding:36px;display:flex;flex-direction:column;gap:28px">
+
+    <!-- buttons -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em">BUTTONS</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1;height:56px;border-radius:18px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 10px 20px -6px rgba(232,95,48,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:700 16px 'Poppins'">Continue</div>
+        <div style="flex:1;height:56px;border-radius:18px;background:#fff;border:1.5px solid #E7DFD2;display:flex;align-items:center;justify-content:center;color:#1B2A2A;font:700 16px 'Poppins'">Skip</div>
+      </div>
+    </div>
+
+    <!-- macro chips -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em">MACRO CHIPS</div>
+      <div style="display:flex;gap:10px">
+        <div style="display:flex;align-items:center;gap:7px;background:#FDECEC;padding:9px 14px;border-radius:999px"><span style="width:9px;height:9px;border-radius:99px;background:#F2545B"></span><span style="font:600 13px 'Plus Jakarta Sans';color:#C23B42">P 124g</span></div>
+        <div style="display:flex;align-items:center;gap:7px;background:#FCF1E2;padding:9px 14px;border-radius:999px"><span style="width:9px;height:9px;border-radius:99px;background:#F2A03D"></span><span style="font:600 13px 'Plus Jakarta Sans';color:#C57A1E">C 180g</span></div>
+        <div style="display:flex;align-items:center;gap:7px;background:#E8F3FD;padding:9px 14px;border-radius:999px"><span style="width:9px;height:9px;border-radius:99px;background:#4DA8F0"></span><span style="font:600 13px 'Plus Jakarta Sans';color:#2C7EC0">F 56g</span></div>
+      </div>
+    </div>
+
+    <!-- rings -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em">RINGS</div>
+      <div style="display:flex;gap:24px;align-items:center">
+        <div style="position:relative;width:96px;height:96px">
+          <svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#EFE6D8" stroke-width="9"/><circle cx="48" cy="48" r="40" fill="none" stroke="url(#cg1)" stroke-width="9" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="80" transform="rotate(-90 48 48)"/><defs><linearGradient id="cg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF7A4D"/><stop offset="1" stop-color="#E85F30"/></linearGradient></defs></svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font:800 22px 'Poppins';color:#1B2A2A;line-height:1">68%</div></div>
+        </div>
+        <div style="display:flex;gap:14px">
+          <div style="position:relative;width:54px;height:54px"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="#FDECEC" stroke-width="6"/><circle cx="27" cy="27" r="22" fill="none" stroke="#F2545B" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="34" transform="rotate(-90 27 27)"/></svg></div>
+          <div style="position:relative;width:54px;height:54px"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="#FCF1E2" stroke-width="6"/><circle cx="27" cy="27" r="22" fill="none" stroke="#F2A03D" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="62" transform="rotate(-90 27 27)"/></svg></div>
+          <div style="position:relative;width:54px;height:54px"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="#E8F3FD" stroke-width="6"/><circle cx="27" cy="27" r="22" fill="none" stroke="#4DA8F0" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="83" transform="rotate(-90 27 27)"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- food card -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em">FOOD CARD</div>
+      <div style="display:flex;align-items:center;gap:14px;background:#FBF8F2;border:1px solid #F0EADF;border-radius:20px;padding:14px">
+        <div style="width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#FFE8D6,#FFD3B0);display:flex;align-items:center;justify-content:center;flex:none">
+          <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14h22a11 11 0 0 1-11 11A11 11 0 0 1 5 14Z"/><path d="M9 14a7 7 0 0 1 14 0"/></svg>
+        </div>
+        <div style="flex:1"><div style="font:600 15px 'Plus Jakarta Sans';color:#1B2A2A">Grilled chicken bowl</div><div style="display:flex;gap:8px;margin-top:6px"><span style="width:8px;height:8px;border-radius:9px;background:#F2545B"></span><span style="width:8px;height:8px;border-radius:9px;background:#F2A03D"></span><span style="width:8px;height:8px;border-radius:9px;background:#4DA8F0"></span><span style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-left:2px">12:40 PM</span></div></div>
+        <div style="text-align:right"><div style="font:800 18px 'Poppins';color:#1B2A2A">520</div><div style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">kcal</div></div>
+      </div>
+    </div>
+
+    <!-- bottom nav + mode bar -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.5;letter-spacing:.08em">BOTTOM NAV · MODE BAR</div>
+      <div style="background:#fff;border:1px solid #F0EADF;border-radius:24px;box-shadow:0 8px 20px -10px rgba(27,42,42,.18);padding:12px 22px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 14 3-4 3 2 4-6"/></svg>
+        <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 8px 16px -4px rgba(232,95,48,.55);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L18 6h0a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;background:rgba(27,42,42,.92);border-radius:18px;padding:8px">
+        <div style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;background:#FF7A4D;padding:8px 16px;border-radius:12px">Food</div>
+        <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.7);padding:8px 16px;border-radius:12px">Barcode</div>
+        <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.7);padding:8px 16px;border-radius:12px">Label</div>
+        <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.7);padding:8px 16px;border-radius:12px">Fridge</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 1: SPLASH ============ -->
+<div style="position:absolute;left:80px;top:1320px;width:390px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">01 · Splash</div>
+  <div style="width:390px;height:844px;background:linear-gradient(150deg,#2a2a2a,#0a0a0a);border-radius:56px;padding:13px;box-shadow:0 40px 80px -28px rgba(27,42,42,.45),0 14px 30px rgba(27,42,42,.16)">
+    <div style="width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:linear-gradient(165deg,#FF8A5B 0%,#FF7A4D 42%,#E85F30 100%);font-family:'Plus Jakarta Sans'">
+      <div style="position:absolute;inset:0;background:radial-gradient(100% 60% at 50% 8%,rgba(255,255,255,.28),transparent 55%)"></div>
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;color:#fff;font:600 15px 'Plus Jakarta Sans';z-index:40"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;font-size:13px">●●● ▮</span></div>
+
+      <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 36px;position:relative">
+        <div style="width:160px;height:160px;border-radius:46px;background:rgba(255,255,255,.16);backdrop-filter:blur(4px);box-shadow:inset 0 2px 10px rgba(255,255,255,.25),0 20px 40px -12px rgba(120,30,0,.4);display:flex;align-items:center;justify-content:center;animation:nibblFloat 4s ease-in-out infinite">
+          <svg width="118" height="118" viewBox="0 0 120 120" style="filter:drop-shadow(0 6px 10px rgba(120,30,0,.3))">
+            <path d="M30 44 L20 9 Q19 6 23 7 L56 28 Z" fill="#F4F0E8"/><path d="M90 44 L100 9 Q101 6 97 7 L64 28 Z" fill="#F4F0E8"/>
+            <path d="M33 42 L26 18 Q25.5 15.5 28.5 17 L50 30 Z" fill="#E85F30"/><path d="M87 42 L94 18 Q94.5 15.5 91.5 17 L70 30 Z" fill="#E85F30"/>
+            <path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 60 88 76 60 98 C32 76 24 60 24 42 Z" fill="#FBF7F0"/>
+            <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 55 90 65 80 74 C72 65 66 60 60 60 C54 60 48 65 40 74 C30 65 25 55 25 41 Z" fill="#FF7A4D"/>
+            <ellipse cx="44" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/><circle cx="45.6" cy="46" r="1.5" fill="#fff"/>
+            <ellipse cx="76" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/><circle cx="77.6" cy="46" r="1.5" fill="#fff"/>
+            <path d="M60 70 L53.5 63 Q60 60.5 66.5 63 Z" fill="#1B2A2A"/><path d="M60 70 L60 78" stroke="#1B2A2A" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="font:800 46px 'Poppins';color:#fff;letter-spacing:-.02em;margin-top:36px">Nibbl<span style="opacity:.7">.</span></div>
+        <div style="font:600 19px 'Plus Jakarta Sans';color:rgba(255,255,255,.92);margin-top:10px;text-align:center;line-height:1.4">Snap it. Nibbl tracks it.</div>
+        <div style="font:500 14px 'Plus Jakarta Sans';color:rgba(255,255,255,.72);margin-top:14px;text-align:center;line-height:1.55;max-width:260px">Effortless calorie &amp; macro tracking. Just point your camera at the plate.</div>
+
+        <div style="position:absolute;bottom:48px;left:36px;right:36px;display:flex;flex-direction:column;gap:14px">
+          <div style="height:58px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;color:#E85F30;font:700 17px 'Poppins';box-shadow:0 14px 28px -8px rgba(120,30,0,.4)">Get Started</div>
+          <div style="text-align:center;font:600 14px 'Plus Jakarta Sans';color:rgba(255,255,255,.85)">I already have an account</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2: HOME ============ -->
+<div style="position:absolute;left:570px;top:1320px;width:390px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">02 · Home</div>
+  <div style="width:390px;height:844px;background:linear-gradient(150deg,#2a2a2a,#0a0a0a);border-radius:56px;padding:13px;box-shadow:0 40px 80px -28px rgba(27,42,42,.45),0 14px 30px rgba(27,42,42,.16)">
+    <div data-screen-label="Home" style="width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#FBF7F0;font-family:'Plus Jakarta Sans'">
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;color:#1B2A2A;font:600 15px 'Plus Jakarta Sans';z-index:40"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+
+      <div style="position:absolute;inset:54px 0 0 0;overflow:hidden">
+        <div style="padding:8px 22px 120px;height:100%;overflow:hidden">
+          <!-- header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div><div style="font:500 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">Good morning</div><div style="font:700 22px 'Poppins';color:#1B2A2A">Hey, Maya</div></div>
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #F0EADF;border-radius:999px;padding:7px 12px;box-shadow:0 4px 12px -6px rgba(27,42,42,.15)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF7A4D"><path d="M12 2c1 4 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 1-3-1 5 3 5 3 2 0-3-1-5 0-8Z"/></svg>
+              <span style="font:700 14px 'Poppins';color:#1B2A2A">12</span>
+            </div>
+          </div>
+
+          <!-- day strip -->
+          <div style="display:flex;gap:7px;margin-bottom:20px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">M</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">8</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">T</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">9</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">W</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">10</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px;background:linear-gradient(150deg,#FF7A4D,#E85F30);box-shadow:0 8px 16px -6px rgba(232,95,48,.5)"><span style="font:600 11px 'Plus Jakarta Sans';color:rgba(255,255,255,.85)">T</span><span style="font:700 14px 'Poppins';color:#fff">11</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">F</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">12</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">S</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">13</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border-radius:14px"><span style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">S</span><span style="font:700 14px 'Poppins';color:#1B2A2A;opacity:.55">14</span></div>
+          </div>
+
+          <!-- hero ring card -->
+          <div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 16px 32px -20px rgba(27,42,42,.28);margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:20px">
+              <div style="position:relative;width:148px;height:148px;flex:none">
+                <svg width="148" height="148" viewBox="0 0 148 148">
+                  <circle cx="74" cy="74" r="63" fill="none" stroke="#F0E8DA" stroke-width="14"/>
+                  <circle cx="74" cy="74" r="63" fill="none" stroke="url(#homeCoral)" stroke-width="14" stroke-linecap="round" stroke-dasharray="395.8" stroke-dashoffset="127" transform="rotate(-90 74 74)"/>
+                  <defs><linearGradient id="homeCoral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A5B"/><stop offset="1" stop-color="#E85F30"/></linearGradient></defs>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <div style="font:800 38px 'Poppins';color:#1B2A2A;line-height:1;letter-spacing:-.02em">1,240</div>
+                  <div style="font:600 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-top:2px">kcal left</div>
+                </div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+                <!-- protein -->
+                <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Protein</span><span style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.55">98<span style="opacity:.6">/124g</span></span></div><div style="height:7px;border-radius:9px;background:#FDECEC;overflow:hidden"><div style="width:79%;height:100%;border-radius:9px;background:#F2545B"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Carbs</span><span style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.55">142<span style="opacity:.6">/180g</span></span></div><div style="height:7px;border-radius:9px;background:#FCF1E2;overflow:hidden"><div style="width:79%;height:100%;border-radius:9px;background:#F2A03D"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font:600 12px 'Plus Jakarta Sans';color:#1B2A2A">Fat</span><span style="font:700 12px 'Poppins';color:#1B2A2A;opacity:.55">34<span style="opacity:.6">/56g</span></span></div><div style="height:7px;border-radius:9px;background:#E8F3FD;overflow:hidden"><div style="width:60%;height:100%;border-radius:9px;background:#4DA8F0"></div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- water + coach row -->
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:1.1;background:#fff;border-radius:22px;padding:16px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 14px 28px -22px rgba(27,42,42,.28)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A">Water</span><span style="font:700 13px 'Poppins';color:#4DA8F0">1.5<span style="opacity:.6;font-size:11px">/2.5L</span></span></div>
+              <div style="display:flex;gap:5px">
+                <div style="flex:1;height:34px;border-radius:8px;background:#4DA8F0"></div><div style="flex:1;height:34px;border-radius:8px;background:#4DA8F0"></div><div style="flex:1;height:34px;border-radius:8px;background:#4DA8F0"></div><div style="flex:1;height:34px;border-radius:8px;background:#E8F3FD"></div><div style="flex:1;height:34px;border-radius:8px;background:#E8F3FD"></div>
+              </div>
+            </div>
+            <div style="flex:.9;background:linear-gradient(150deg,#1B2A2A,#26403d);border-radius:22px;padding:16px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 14px 28px -16px rgba(27,42,42,.5)">
+              <svg width="32" height="32" viewBox="0 0 120 120"><path d="M30 44 L21 12 L54 30 Z" fill="#E85F30"/><path d="M90 44 L99 12 L66 30 Z" fill="#E85F30"/><path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 60 87 76 60 96 C33 76 25 60 25 41 Z" fill="#FF7A4D"/><circle cx="45" cy="49" r="4" fill="#1B2A2A"/><circle cx="75" cy="49" r="4" fill="#1B2A2A"/><path d="M60 70 L54 64 Q60 62 66 64 Z" fill="#1B2A2A"/></svg>
+              <div><div style="font:700 14px 'Poppins'">Ask Nibbl</div><div style="font:500 11px 'Plus Jakarta Sans';color:rgba(255,255,255,.7);margin-top:2px">Your AI coach</div></div>
+            </div>
+          </div>
+
+          <!-- today's log -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font:700 17px 'Poppins';color:#1B2A2A">Today's Log</span><span style="font:600 13px 'Plus Jakarta Sans';color:#E85F30">See all</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:13px;background:#fff;border-radius:20px;padding:12px;box-shadow:0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)">
+              <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#FFE8D6,#FFD3B0);display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 32 32" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14h22a11 11 0 0 1-11 11A11 11 0 0 1 5 14Z"/><path d="M9 14a7 7 0 0 1 14 0"/></svg></div>
+              <div style="flex:1"><div style="font:600 14px 'Plus Jakarta Sans';color:#1B2A2A">Greek yogurt bowl</div><div style="display:flex;gap:7px;align-items:center;margin-top:5px"><span style="width:7px;height:7px;border-radius:9px;background:#F2545B"></span><span style="width:7px;height:7px;border-radius:9px;background:#F2A03D"></span><span style="width:7px;height:7px;border-radius:9px;background:#4DA8F0"></span><span style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">8:20 AM</span></div></div>
+              <div style="text-align:right"><div style="font:800 16px 'Poppins';color:#1B2A2A">320</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:13px;background:#fff;border-radius:20px;padding:12px;box-shadow:0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)">
+              <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#E5F3E0,#CDE9C4);display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 32 32" fill="none" stroke="#4f9f3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6c5 0 9 3 9 9s-4 11-9 11S7 21 7 15s4-9 9-9Z"/><path d="M16 6V3"/></svg></div>
+              <div style="flex:1"><div style="font:600 14px 'Plus Jakarta Sans';color:#1B2A2A">Grilled chicken bowl</div><div style="display:flex;gap:7px;align-items:center;margin-top:5px"><span style="width:7px;height:7px;border-radius:9px;background:#F2545B"></span><span style="width:7px;height:7px;border-radius:9px;background:#F2A03D"></span><span style="width:7px;height:7px;border-radius:9px;background:#4DA8F0"></span><span style="font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">12:40 PM</span></div></div>
+              <div style="text-align:right"><div style="font:800 16px 'Poppins';color:#1B2A2A">520</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- bottom nav -->
+      <div style="position:absolute;bottom:18px;left:18px;right:18px;background:#fff;border:1px solid #F0EADF;border-radius:26px;box-shadow:0 10px 30px -8px rgba(27,42,42,.22);padding:12px 24px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 14 3-4 3 2 4-6"/></svg>
+        <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 8px 16px -4px rgba(232,95,48,.55);display:flex;align-items:center;justify-content:center;margin-top:-22px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L18 6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 3: CAMERA ============ -->
+<div style="position:absolute;left:1060px;top:1320px;width:390px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">03 · Scanner</div>
+  <div style="width:390px;height:844px;background:linear-gradient(150deg,#2a2a2a,#0a0a0a);border-radius:56px;padding:13px;box-shadow:0 40px 80px -28px rgba(27,42,42,.45),0 14px 30px rgba(27,42,42,.16)">
+    <div data-screen-label="Scanner" style="width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#15110e;font-family:'Plus Jakarta Sans'">
+      <!-- viewfinder bg -->
+      <div style="position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 38%,#3a2c22,#15110e 75%)"></div>
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;color:#fff;font:600 15px 'Plus Jakarta Sans';z-index:40"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+
+      <!-- top controls -->
+      <div style="position:absolute;top:64px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;z-index:30">
+        <div style="width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></div>
+        <div style="font:600 14px 'Plus Jakarta Sans';color:#fff">Scan your meal</div>
+        <div style="width:40px;height:40px;border-radius:14px;background:rgba(255,123,77,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(232,95,48,.7)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></div>
+      </div>
+
+      <!-- corner brackets -->
+      <div style="position:absolute;top:150px;left:48px;right:48px;height:294px;z-index:20">
+        <div style="position:absolute;top:0;left:0;width:42px;height:42px;border-top:4px solid #FF7A4D;border-left:4px solid #FF7A4D;border-top-left-radius:16px"></div>
+        <div style="position:absolute;top:0;right:0;width:42px;height:42px;border-top:4px solid #FF7A4D;border-right:4px solid #FF7A4D;border-top-right-radius:16px"></div>
+        <div style="position:absolute;bottom:0;left:0;width:42px;height:42px;border-bottom:4px solid #FF7A4D;border-left:4px solid #FF7A4D;border-bottom-left-radius:16px"></div>
+        <div style="position:absolute;bottom:0;right:0;width:42px;height:42px;border-bottom:4px solid #FF7A4D;border-right:4px solid #FF7A4D;border-bottom-right-radius:16px"></div>
+        <!-- plate hint -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px dashed rgba(255,255,255,.25)"></div></div>
+        <div style="position:absolute;bottom:-34px;left:0;right:0;text-align:center;font:500 12px 'Plus Jakarta Sans';color:rgba(255,255,255,.6)">Center your plate in the frame</div>
+      </div>
+
+      <!-- result card -->
+      <div style="position:absolute;left:18px;right:18px;bottom:188px;background:#fff;border-radius:24px;padding:16px;box-shadow:0 20px 40px -12px rgba(0,0,0,.5);z-index:30">
+        <div style="display:flex;align-items:center;gap:13px">
+          <div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#FFE8D6,#FFD3B0);display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 32 32" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14h22a11 11 0 0 1-11 11A11 11 0 0 1 5 14Z"/><path d="M9 14a7 7 0 0 1 14 0"/></svg></div>
+          <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="font:600 15px 'Plus Jakarta Sans';color:#1B2A2A">Grilled chicken bowl</span><span style="font:600 10px 'Plus Jakarta Sans';color:#E85F30;background:#FFEDE4;padding:2px 7px;border-radius:99px">98% match</span></div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-top:3px">Detected by Nibbl AI</div></div>
+          <div style="text-align:right"><div style="font:800 22px 'Poppins';color:#1B2A2A">520</div><div style="font:500 10px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">kcal</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <div style="flex:1;display:flex;align-items:center;gap:6px;background:#FDECEC;padding:8px 10px;border-radius:12px"><span style="width:8px;height:8px;border-radius:9px;background:#F2545B"></span><span style="font:600 12px 'Plus Jakarta Sans';color:#C23B42">42g</span></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;background:#FCF1E2;padding:8px 10px;border-radius:12px"><span style="width:8px;height:8px;border-radius:9px;background:#F2A03D"></span><span style="font:600 12px 'Plus Jakarta Sans';color:#C57A1E">38g</span></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;background:#E8F3FD;padding:8px 10px;border-radius:12px"><span style="width:8px;height:8px;border-radius:9px;background:#4DA8F0"></span><span style="font:600 12px 'Plus Jakarta Sans';color:#2C7EC0">18g</span></div>
+        </div>
+        <div style="height:48px;border-radius:15px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 10px 20px -6px rgba(232,95,48,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:700 15px 'Poppins';margin-top:12px">Add to Log</div>
+      </div>
+
+      <!-- mode bar + shutter -->
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:0 20px 30px;z-index:30">
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:18px">
+          <div style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;background:#FF7A4D;padding:8px 15px;border-radius:12px">Food</div>
+          <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.65);padding:8px 15px;border-radius:12px;background:rgba(255,255,255,.08)">Barcode</div>
+          <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.65);padding:8px 15px;border-radius:12px;background:rgba(255,255,255,.08)">Label</div>
+          <div style="font:600 13px 'Plus Jakarta Sans';color:rgba(255,255,255,.65);padding:8px 15px;border-radius:12px;background:rgba(255,255,255,.08)">Fridge</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3.5"/></svg></div>
+          <div style="width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center"><div style="width:60px;height:60px;border-radius:50%;background:#fff;border:3px solid #15110e;box-shadow:0 0 0 3px #fff"></div></div>
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 4: PROGRESS ============ -->
+<div style="position:absolute;left:1550px;top:1320px;width:390px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">04 · Progress</div>
+  <div style="width:390px;height:844px;background:linear-gradient(150deg,#2a2a2a,#0a0a0a);border-radius:56px;padding:13px;box-shadow:0 40px 80px -28px rgba(27,42,42,.45),0 14px 30px rgba(27,42,42,.16)">
+    <div data-screen-label="Progress" style="width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#FBF7F0;font-family:'Plus Jakarta Sans'">
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;color:#1B2A2A;font:600 15px 'Plus Jakarta Sans';z-index:40"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+
+      <div style="position:absolute;inset:54px 0 0 0;padding:8px 22px 120px;overflow:hidden">
+        <div style="font:700 24px 'Poppins';color:#1B2A2A;margin-bottom:4px">Progress</div>
+        <div style="font:500 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:20px">Last 30 days</div>
+
+        <!-- weight chart card -->
+        <div style="background:#fff;border-radius:26px;padding:20px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 16px 32px -22px rgba(27,42,42,.28);margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+            <div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">Current weight</div><div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font:800 34px 'Poppins';color:#1B2A2A;letter-spacing:-.02em">68.4</span><span style="font:600 14px 'Poppins';color:#1B2A2A;opacity:.5">kg</span></div></div>
+            <div style="display:flex;align-items:center;gap:5px;background:#E9F6EC;padding:6px 11px;border-radius:99px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3E9B57" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg><span style="font:700 12px 'Poppins';color:#3E9B57">2.1 kg</span></div>
+          </div>
+          <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
+            <defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7A4D" stop-opacity=".28"/><stop offset="1" stop-color="#FF7A4D" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0 30 C40 28 60 50 100 58 C140 66 160 60 200 78 C240 96 270 86 300 92 L300 120 L0 120 Z" fill="url(#wfill)"/>
+            <path d="M0 30 C40 28 60 50 100 58 C140 66 160 60 200 78 C240 96 270 86 300 92" fill="none" stroke="#E85F30" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="300" cy="92" r="5" fill="#E85F30" stroke="#fff" stroke-width="2.5"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font:500 11px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.4"><span>May 12</span><span>May 26</span><span>Jun 9</span></div>
+        </div>
+
+        <!-- days logged ring + stat -->
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <div style="flex:1;background:#fff;border-radius:24px;padding:18px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 14px 28px -22px rgba(27,42,42,.28);display:flex;align-items:center;gap:14px">
+            <div style="position:relative;width:74px;height:74px;flex:none">
+              <svg width="74" height="74" viewBox="0 0 74 74"><circle cx="37" cy="37" r="30" fill="none" stroke="#F0E8DA" stroke-width="8"/><circle cx="37" cy="37" r="30" fill="none" stroke="url(#dlc)" stroke-width="8" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="38" transform="rotate(-90 37 37)"/><defs><linearGradient id="dlc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A5B"/><stop offset="1" stop-color="#E85F30"/></linearGradient></defs></svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font:800 19px 'Poppins';color:#1B2A2A;line-height:1">24</div></div>
+            </div>
+            <div><div style="font:700 14px 'Poppins';color:#1B2A2A">Days logged</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-top:2px">of 30 days</div></div>
+          </div>
+        </div>
+
+        <!-- totals -->
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;background:#fff;border-radius:22px;padding:16px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 14px 28px -22px rgba(27,42,42,.28)"><div style="font:800 24px 'Poppins';color:#1B2A2A">1,820</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-top:3px">Avg daily kcal</div></div>
+          <div style="flex:1;background:#fff;border-radius:22px;padding:16px;box-shadow:0 1px 3px rgba(27,42,42,.05),0 14px 28px -22px rgba(27,42,42,.28)"><div style="display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="#FF7A4D"><path d="M12 2c1 4 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 1-3-1 5 3 5 3 2 0-3-1-5 0-8Z"/></svg><div style="font:800 24px 'Poppins';color:#1B2A2A">12</div></div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-top:3px">Day streak</div></div>
+        </div>
+      </div>
+
+      <!-- bottom nav -->
+      <div style="position:absolute;bottom:18px;left:18px;right:18px;background:#fff;border:1px solid #F0EADF;border-radius:26px;box-shadow:0 10px 30px -8px rgba(27,42,42,.22);padding:12px 24px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 14 3-4 3 2 4-6"/></svg>
+        <div style="width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 8px 16px -4px rgba(232,95,48,.55);display:flex;align-items:center;justify-content:center;margin-top:-22px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L18 6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B7AE9E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 5: PAYWALL ============ -->
+<div style="position:absolute;left:2040px;top:1320px;width:390px">
+  <div data-drags-parent="1" style="font:600 13px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase">05 · Paywall</div>
+  <div style="width:390px;height:844px;background:linear-gradient(150deg,#2a2a2a,#0a0a0a);border-radius:56px;padding:13px;box-shadow:0 40px 80px -28px rgba(27,42,42,.45),0 14px 30px rgba(27,42,42,.16)">
+    <div data-screen-label="Paywall" style="width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#FBF7F0;font-family:'Plus Jakarta Sans'">
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:18px;z-index:50"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;color:#1B2A2A;font:600 15px 'Plus Jakarta Sans';z-index:40"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>
+
+      <!-- coral hero top -->
+      <div style="position:absolute;top:0;left:0;right:0;height:262px;background:linear-gradient(160deg,#FF8A5B,#E85F30);overflow:hidden">
+        <div style="position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 0%,rgba(255,255,255,.25),transparent 60%)"></div>
+        <div style="position:absolute;top:74px;right:22px;width:34px;height:34px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+        <div style="position:absolute;top:86px;left:0;right:0;display:flex;flex-direction:column;align-items:center">
+          <div style="width:84px;height:84px;border-radius:26px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;animation:nibblFloat 4s ease-in-out infinite">
+            <svg width="60" height="60" viewBox="0 0 120 120"><path d="M30 44 L20 9 Q19 6 23 7 L56 28 Z" fill="#F4F0E8"/><path d="M90 44 L100 9 Q101 6 97 7 L64 28 Z" fill="#F4F0E8"/><path d="M33 42 L26 18 Q25.5 15.5 28.5 17 L50 30 Z" fill="#E85F30"/><path d="M87 42 L94 18 Q94.5 15.5 91.5 17 L70 30 Z" fill="#E85F30"/><path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 60 88 76 60 98 C32 76 24 60 24 42 Z" fill="#FBF7F0"/><path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 55 90 65 80 74 C72 65 66 60 60 60 C54 60 48 65 40 74 C30 65 25 55 25 41 Z" fill="#FF7A4D"/><ellipse cx="44" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/><ellipse cx="76" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A"/><path d="M60 70 L53.5 63 Q60 60.5 66.5 63 Z" fill="#1B2A2A"/></svg>
+          </div>
+          <div style="font:700 12px 'Poppins';color:#fff;letter-spacing:.18em;margin-top:16px;opacity:.85">NIBBL PRO</div>
+          <div style="font:800 25px 'Poppins';color:#fff;margin-top:6px;text-align:center;line-height:1.2;padding:0 30px">Track smarter,<br>effortlessly</div>
+        </div>
+      </div>
+
+      <div style="position:absolute;inset:262px 0 0 0;padding:22px 22px 24px;display:flex;flex-direction:column">
+        <!-- benefits -->
+        <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:24px;height:24px;border-radius:8px;background:#FFEDE4;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></div><span style="font:500 14px 'Plus Jakarta Sans';color:#1B2A2A">Unlimited AI food scans</span></div>
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:24px;height:24px;border-radius:8px;background:#FFEDE4;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></div><span style="font:500 14px 'Plus Jakarta Sans';color:#1B2A2A">Barcode, label &amp; fridge modes</span></div>
+          <div style="display:flex;align-items:center;gap:11px"><div style="width:24px;height:24px;border-radius:8px;background:#FFEDE4;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E85F30" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></div><span style="font:500 14px 'Plus Jakarta Sans';color:#1B2A2A">AI Coach &amp; advanced insights</span></div>
+        </div>
+
+        <!-- plans -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #F0EADF;border-radius:18px;padding:14px 16px"><div><div style="font:600 15px 'Plus Jakarta Sans';color:#1B2A2A">Monthly</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">Billed every month</div></div><div style="font:800 18px 'Poppins';color:#1B2A2A">$9.99</div></div>
+
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;background:#fff;border:2px solid #E85F30;border-radius:18px;padding:14px 16px;box-shadow:0 12px 24px -12px rgba(232,95,48,.4)">
+            <div style="position:absolute;top:-11px;left:16px;background:linear-gradient(135deg,#FF7A4D,#E85F30);color:#fff;font:700 10px 'Poppins';letter-spacing:.04em;padding:4px 10px;border-radius:99px">BEST VALUE · SAVE 75%</div>
+            <div><div style="font:600 15px 'Plus Jakarta Sans';color:#1B2A2A">Yearly</div><div style="font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.5">$2.50 / month</div></div>
+            <div style="text-align:right"><div style="font:800 18px 'Poppins';color:#E85F30">$29.99</div></div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+          <div style="height:58px;border-radius:18px;background:linear-gradient(135deg,#FF7A4D,#E85F30);box-shadow:0 14px 28px -8px rgba(232,95,48,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:700 17px 'Poppins'">Start 7-day free trial</div>
+          <div style="text-align:center;font:500 12px 'Plus Jakarta Sans';color:#1B2A2A;opacity:.45">Cancel anytime · Restore purchase</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+
+export function NibblDesignCanvas() {
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{`@keyframes nibblFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}} .nibbl-design-canvas *{box-sizing:border-box}`}</style>
+      <div
+        className="nibbl-design-canvas"
+        style={{ position: "relative", width: 2480, height: 2210, background: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        dangerouslySetInnerHTML={{ __html: NIBBL_DESIGN_HTML }}
+      />
+    </>
+  );
+}
