@@ -1,0 +1,604 @@
+import React, { useState, useRef } from "react";
+import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe } from "lucide-react";
+
+const C = {
+  ink: "#1B2A2A", cream: "#FBF7F0", accent: "#FF7A4D", accentLight: "#FF8A5B", accentDark: "#E85F30",
+  protein: "#F2545B", carbs: "#F2A03D", fat: "#4DA8F0", water: "#4DA8F0",
+  flame: "#FF7A3D", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF",
+};
+const BODY = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+const DISP = "Poppins, system-ui, sans-serif";
+
+const LANGS = [
+  { code: "EN", flag: "\u{1F1FA}\u{1F1F8}", name: "English" },
+  { code: "ES", flag: "\u{1F1EA}\u{1F1F8}", name: "Espanol" },
+  { code: "AR", flag: "\u{1F1F8}\u{1F1E6}", name: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629" },
+  { code: "FR", flag: "\u{1F1EB}\u{1F1F7}", name: "Francais" },
+  { code: "PT", flag: "\u{1F1E7}\u{1F1F7}", name: "Portugues" },
+];
+const T = {
+  EN: { tagline: "Snap it. Nibbl tracks it.", getStarted: "Get Started", haveAccount: "Already have an account?", signIn: "Sign In here", caloriesLeft: "Calories left", caloriesOver: "Calories over", protein: "Protein", carbs: "Carbs", fat: "Fat", left: "left", over: "over", water: "Water", glasses: "glasses", askCoach: "Ask your AI Coach", coachSub: "What should I eat to hit my macros?", todaysLog: "Today's Log", log: "Log", noMeals: "No meals logged yet. Tap + to add one.", today: "Today", yesterday: "Yesterday", addFood: "Add food", home: "Home", progress: "Progress", settings: "Settings", editGoals: "Edit goals", dailyTarget: "Daily target", goal: "Goal", sex: "Sex", activity: "Activity", pace: "Pace", language: "Language", save: "Save", scanMeal: "Scan a meal", scanBarcode: "Scan Barcode", scanLabel: "Scan Food Label", scanFridge: "Scan Fridge", alignBarcode: "Align the barcode in the frame to scan", food: "Food", barcode: "Barcode", foodLabel: "Food Label", fridge: "Fridge", upgrade: "Upgrade to Nibbl Pro", widgets: "Home & Lock Screen widgets", invite: "Invite friends - earn free month" },
+  ES: { tagline: "Foto y listo. Nibbl lo registra.", getStarted: "Empezar", haveAccount: "Ya tienes cuenta?", signIn: "Inicia sesion", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias de mas", protein: "Proteina", carbs: "Carbos", fat: "Grasa", left: "restante", over: "de mas", water: "Agua", glasses: "vasos", askCoach: "Pregunta a tu Coach IA", coachSub: "Que como para cumplir mis macros?", todaysLog: "Registro de hoy", log: "Registro", noMeals: "Sin comidas. Toca + para anadir.", today: "Hoy", yesterday: "Ayer", addFood: "Anadir comida", home: "Inicio", progress: "Progreso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Actividad", pace: "Ritmo", language: "Idioma", save: "Guardar", scanMeal: "Escanear comida", scanBarcode: "Escanear codigo", scanLabel: "Escanear etiqueta", scanFridge: "Escanear nevera", alignBarcode: "Alinea el codigo en el marco", food: "Comida", barcode: "Codigo", foodLabel: "Etiqueta", fridge: "Nevera", upgrade: "Mejora a Nibbl Pro", widgets: "Widgets de pantalla", invite: "Invita amigos - gana un mes gratis" },
+  AR: { tagline: "\u0635\u0648\u0651\u0631\u0647\u0627. \u0646\u0650\u0628\u0644 \u064A\u062D\u0633\u0628\u0647\u0627.", getStarted: "\u0627\u0628\u062F\u0623", haveAccount: "\u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628\u061F", signIn: "\u0633\u062C\u0651\u0644 \u0627\u0644\u062F\u062E\u0648\u0644", caloriesLeft: "\u0633\u0639\u0631\u0627\u062A \u0645\u062A\u0628\u0642\u064A\u0629", caloriesOver: "\u0633\u0639\u0631\u0627\u062A \u0632\u0627\u0626\u062F\u0629", protein: "\u0628\u0631\u0648\u062A\u064A\u0646", carbs: "\u0643\u0631\u0628\u0648\u0647\u064A\u062F\u0631\u0627\u062A", fat: "\u062F\u0647\u0648\u0646", left: "\u0645\u062A\u0628\u0642\u064A", over: "\u0632\u0627\u0626\u062F", water: "\u0645\u0627\u0621", glasses: "\u0623\u0643\u0648\u0627\u0628", askCoach: "\u0627\u0633\u0623\u0644 \u0645\u062F\u0631\u0651\u0628 \u0627\u0644\u0630\u0643\u0627\u0621", coachSub: "\u0645\u0627\u0630\u0627 \u0622\u0643\u0644 \u0644\u0623\u062D\u0642\u0642 \u0623\u0647\u062F\u0627\u0641\u064A\u061F", todaysLog: "\u0633\u062C\u0644 \u0627\u0644\u064A\u0648\u0645", log: "\u0627\u0644\u0633\u062C\u0644", noMeals: "\u0644\u0627 \u0648\u062C\u0628\u0627\u062A. \u0627\u0636\u063A\u0637 + \u0644\u0644\u0625\u0636\u0627\u0641\u0629.", today: "\u0627\u0644\u064A\u0648\u0645", yesterday: "\u0623\u0645\u0633", addFood: "\u0623\u0636\u0641 \u0637\u0639\u0627\u0645\u064B\u0627", home: "\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629", progress: "\u0627\u0644\u062A\u0642\u062F\u0651\u0645", settings: "\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A", editGoals: "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0623\u0647\u062F\u0627\u0641", dailyTarget: "\u0627\u0644\u0647\u062F\u0641 \u0627\u0644\u064A\u0648\u0645\u064A", goal: "\u0627\u0644\u0647\u062F\u0641", sex: "\u0627\u0644\u062C\u0646\u0633", activity: "\u0627\u0644\u0646\u0634\u0627\u0637", pace: "\u0627\u0644\u0648\u062A\u064A\u0631\u0629", language: "\u0627\u0644\u0644\u063A\u0629", save: "\u062D\u0641\u0638", scanMeal: "\u0635\u0648\u0651\u0631 \u0648\u062C\u0628\u0629", scanBarcode: "\u0645\u0633\u062D \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F", scanLabel: "\u0645\u0633\u062D \u0627\u0644\u0645\u0644\u0635\u0642", scanFridge: "\u0645\u0633\u062D \u0627\u0644\u062B\u0644\u0627\u062C\u0629", alignBarcode: "\u062D\u0627\u0630\u0650 \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F \u062F\u0627\u062E\u0644 \u0627\u0644\u0625\u0637\u0627\u0631", food: "\u0637\u0639\u0627\u0645", barcode: "\u0628\u0627\u0631\u0643\u0648\u062F", foodLabel: "\u0645\u0644\u0635\u0642", fridge: "\u062B\u0644\u0627\u062C\u0629", upgrade: "\u0627\u0644\u062A\u0631\u0642\u064A\u0629 \u0625\u0644\u0649 Nibbl Pro", widgets: "\u0623\u062F\u0648\u0627\u062A \u0627\u0644\u0634\u0627\u0634\u0629", invite: "\u0627\u062F\u0639\u064F \u0623\u0635\u062F\u0642\u0627\u0621\u0643 - \u0627\u0643\u0633\u0628 \u0634\u0647\u0631\u064B\u0627 \u0645\u062C\u0627\u0646\u064A\u064B\u0627" },
+  FR: { tagline: "Photographiez. Nibbl compte.", getStarted: "Commencer", haveAccount: "Vous avez un compte ?", signIn: "Se connecter", caloriesLeft: "Calories restantes", caloriesOver: "Calories en trop", protein: "Proteines", carbs: "Glucides", fat: "Lipides", left: "restant", over: "en trop", water: "Eau", glasses: "verres", askCoach: "Demandez au Coach IA", coachSub: "Que manger pour mes macros ?", todaysLog: "Journal du jour", log: "Journal", noMeals: "Aucun repas. Touchez + pour ajouter.", today: "Aujourd'hui", yesterday: "Hier", addFood: "Ajouter", home: "Accueil", progress: "Progres", settings: "Reglages", editGoals: "Modifier objectifs", dailyTarget: "Objectif quotidien", goal: "Objectif", sex: "Sexe", activity: "Activite", pace: "Rythme", language: "Langue", save: "Enregistrer", scanMeal: "Scanner un repas", scanBarcode: "Scanner code-barres", scanLabel: "Scanner etiquette", scanFridge: "Scanner frigo", alignBarcode: "Alignez le code dans le cadre", food: "Repas", barcode: "Code", foodLabel: "Etiquette", fridge: "Frigo", upgrade: "Passer a Nibbl Pro", widgets: "Widgets d'ecran", invite: "Invitez des amis - mois gratuit" },
+  PT: { tagline: "Foto e pronto. Nibbl registra.", getStarted: "Comecar", haveAccount: "Ja tem conta?", signIn: "Entrar", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias a mais", protein: "Proteina", carbs: "Carbos", fat: "Gordura", left: "restante", over: "a mais", water: "Agua", glasses: "copos", askCoach: "Pergunte ao Coach IA", coachSub: "O que comer para bater minhas macros?", todaysLog: "Registro de hoje", log: "Registro", noMeals: "Sem refeicoes. Toque + para adicionar.", today: "Hoje", yesterday: "Ontem", addFood: "Adicionar", home: "Inicio", progress: "Progresso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Atividade", pace: "Ritmo", language: "Idioma", save: "Salvar", scanMeal: "Escanear refeicao", scanBarcode: "Escanear codigo", scanLabel: "Escanear rotulo", scanFridge: "Escanear geladeira", alignBarcode: "Alinhe o codigo no quadro", food: "Comida", barcode: "Codigo", foodLabel: "Rotulo", fridge: "Geladeira", upgrade: "Assine o Nibbl Pro", widgets: "Widgets de tela", invite: "Convide amigos - ganhe um mes gratis" },
+};
+
+function NibblMark({ size = 40, radius = 11 }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", display: "grid", placeItems: "center", background: "linear-gradient(145deg, " + C.accent + ", " + C.accentDark + ")" }}>
+      <svg width={size * 0.66} height={size * 0.66} viewBox="0 0 64 64" fill="none">
+        <path d="M12 16 L22 30 L8 30 Z" fill="#fff" /><path d="M52 16 L42 30 L56 30 Z" fill="#fff" />
+        <path d="M32 18 C46 18 50 30 50 38 C50 50 42 56 32 56 C22 56 14 50 14 38 C14 30 18 18 32 18 Z" fill="#fff" />
+        <path d="M14 38 C14 30 18 18 32 18 L32 44 Z" fill="#FFE7DC" opacity="0.55" />
+        <circle cx="25" cy="36" r="3" fill={C.accentDark} /><circle cx="39" cy="36" r="3" fill={C.accentDark} />
+        <path d="M32 42 L28 48 L36 48 Z" fill={C.accentDark} /><circle cx="32" cy="47" r="2.2" fill={C.ink} />
+      </svg>
+    </div>
+  );
+}
+
+const STEPS = [
+  { key: "goal", q: "What's your goal?", opts: ["Lose weight", "Maintain", "Gain muscle"] },
+  { key: "sex", q: "What's your sex?", opts: ["Female", "Male", "Other"] },
+  { key: "activity", q: "How active are you?", opts: ["Sedentary", "Lightly active", "Very active"] },
+  { key: "pace", q: "How fast do you want results?", opts: ["Steady", "Moderate", "Aggressive"] },
+];
+const TARGET = { "Lose weight": 1800, Maintain: 2200, "Gain muscle": 2700 };
+
+function foodEmoji(name) {
+  const n = (name || "").toLowerCase();
+  const map = [["burger", "\u{1F354}"], ["cheese", "\u{1F9C0}"], ["chicken", "\u{1F357}"], ["pizza", "\u{1F355}"], ["salad", "\u{1F957}"], ["rice", "\u{1F35A}"], ["egg", "\u{1F95A}"], ["banana", "\u{1F34C}"], ["apple", "\u{1F34E}"], ["fish", "\u{1F41F}"], ["salmon", "\u{1F41F}"], ["yogurt", "\u{1F95B}"], ["shake", "\u{1F964}"], ["oat", "\u{1F963}"], ["almond", "\u{1F330}"], ["avocado", "\u{1F951}"], ["bread", "\u{1F35E}"], ["pasta", "\u{1F35D}"], ["taco", "\u{1F32E}"], ["coffee", "\u2615"], ["soup", "\u{1F372}"], ["steak", "\u{1F969}"], ["fries", "\u{1F35F}"], ["sandwich", "\u{1F96A}"]];
+  for (const pair of map) if (n.includes(pair[0])) return pair[1];
+  return "\u{1F37D}\uFE0F";
+}
+
+const FOOD_DB = [
+  { name: "Grilled chicken breast", calories: 165, protein: 31, carbs: 0, fat: 4 },
+  { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0 },
+  { name: "Greek yogurt", calories: 100, protein: 17, carbs: 6, fat: 0 },
+  { name: "White rice (1 cup)", calories: 205, protein: 4, carbs: 45, fat: 0 },
+  { name: "Avocado", calories: 240, protein: 3, carbs: 12, fat: 22 },
+  { name: "Egg", calories: 78, protein: 6, carbs: 1, fat: 5 },
+  { name: "Almonds (28g)", calories: 164, protein: 6, carbs: 6, fat: 14 },
+  { name: "Salmon fillet", calories: 280, protein: 39, carbs: 0, fat: 13 },
+  { name: "Oatmeal (1 cup)", calories: 150, protein: 5, carbs: 27, fat: 3 },
+  { name: "Protein shake", calories: 160, protein: 30, carbs: 5, fat: 2 },
+];
+
+export default function Nibbl() {
+  const [screen, setScreen] = useState("splash");
+  const [obIndex, setObIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [tab, setTab] = useState("home");
+  const [pro, setPro] = useState(false);
+  const [sheet, setSheet] = useState(null);
+  const [scanner, setScanner] = useState(false);
+  const [dayOffset, setDayOffset] = useState(0);
+  const [lang, setLang] = useState("EN");
+  const t = T[lang];
+  const rtl = lang === "AR";
+
+  const goalCal = TARGET[answers.goal] || 2500;
+  const [goals, setGoals] = useState(null);
+  const target = goals ? goals.calories : goalCal;
+  const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat } : { protein: 263, carbs: 350, fat: 117 };
+  const waterGoal = 8;
+
+  const [logsByDay, setLogsByDay] = useState({ 0: [] });
+  const [waterByDay, setWaterByDay] = useState({ 0: 0 });
+  const log = logsByDay[dayOffset] || [];
+  const water = waterByDay[dayOffset] || 0;
+  const setLog = (fn) => setLogsByDay((m) => ({ ...m, [dayOffset]: fn(m[dayOffset] || []) }));
+  const setWater = (n) => setWaterByDay((m) => ({ ...m, [dayOffset]: Math.max(0, n) }));
+
+  const [weights, setWeights] = useState([{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
+  const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat }), { cal: 0, p: 0, c: 0, f: 0 });
+  const calLeft = target - consumed.cal;
+
+  const FREE_LIMIT = 3;
+  const addMeal = (m) => {
+    const totalToday = (logsByDay[0] || []).length;
+    if (!pro && totalToday >= FREE_LIMIT) { setScreen("paywall"); return false; }
+    setLog((l) => [{ ...m, id: Date.now(), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }, ...l]);
+    return true;
+  };
+  const updateMeal = (id, m) => setLog((l) => l.map((x) => (x.id === id ? { ...x, ...m } : x)));
+  const removeMeal = (id) => setLog((l) => l.filter((x) => x.id !== id));
+
+  const wrap = (children) => <div dir={rtl ? "rtl" : "ltr"} style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>;
+
+  if (screen === "splash") {
+    return (
+      <Phone>{wrap(
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 22px", position: "relative", background: "linear-gradient(165deg,#FF8A5B 0%,#FF7A4D 42%,#E85F30 100%)", fontFamily: BODY }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(100% 60% at 50% 8%,rgba(255,255,255,.28),transparent 55%)", pointerEvents: "none" }} />
+          <button onClick={() => setSheet("lang")} style={{ position: "relative", alignSelf: rtl ? "flex-start" : "flex-end", marginTop: 16, fontSize: 15, fontWeight: 600, color: "#fff", border: "1px solid rgba(255,255,255,.35)", background: "rgba(255,255,255,.12)", borderRadius: 99, padding: "6px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>{LANGS.find((l) => l.code === lang).flag} {lang} {"\u25BE"}</button>
+          <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ background: "rgba(255,255,255,.16)", borderRadius: 20, padding: 8 }}><NibblMark size={56} radius={16} /></div><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 40, color: "#fff", letterSpacing: -1 }}>Nibbl</span></div>
+            <MiniHomePreview target={2500} t={t} />
+            <h1 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, lineHeight: 1.2, textAlign: "center", color: "#fff", margin: 0, maxWidth: 280 }}>{t.tagline}</h1>
+          </div>
+          <button onClick={() => setScreen("onboarding")} style={{ position: "relative", background: "#fff", color: C.accentDark, border: "none", borderRadius: 20, padding: "19px", fontSize: 18, fontWeight: 700, fontFamily: DISP, boxShadow: "0 14px 28px -8px rgba(120,30,0,.4)", cursor: "pointer", marginBottom: 14 }}>{t.getStarted}</button>
+          <div style={{ position: "relative", textAlign: "center", fontSize: 15, color: "rgba(255,255,255,.9)", fontWeight: 600, marginBottom: 24 }}>{t.haveAccount} <span style={{ color: "#fff", textDecoration: "underline" }}>{t.signIn}</span></div>
+        </div>
+      )}
+        {sheet === "lang" && <LangSheet onClose={() => setSheet(null)} lang={lang} setLang={(l) => { setLang(l); setSheet(null); }} title={t.language} />}
+      </Phone>
+    );
+  }
+
+  if (screen === "onboarding") {
+    const step = STEPS[obIndex];
+    const pct = (obIndex / STEPS.length) * 100;
+    const pick = (opt) => { setAnswers({ ...answers, [step.key]: opt }); setTimeout(() => { if (obIndex < STEPS.length - 1) setObIndex(obIndex + 1); else setScreen("paywall"); }, 180); };
+    return (
+      <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 22px", background: C.cream }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
+          <button onClick={() => (obIndex > 0 ? setObIndex(obIndex - 1) : setScreen("splash"))} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 4 }}><ChevronLeft size={26} color={C.ink} /></button>
+          <div style={{ flex: 1, height: 8, background: "#EFE6D8", borderRadius: 99 }}><div style={{ width: pct + "%", height: "100%", background: C.accent, borderRadius: 99, transition: "width .3s" }} /></div>
+        </div>
+        <NibblMark size={34} />
+        <h2 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, lineHeight: 1.15, margin: "14px 0 28px" }}>{step.q}</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {step.opts.map((o) => { const sel = answers[step.key] === o; return <button key={o} onClick={() => pick(o)} style={{ textAlign: "left", padding: "20px 22px", borderRadius: 20, border: "2px solid " + (sel ? C.accent : "transparent"), background: "#fff", fontSize: 18, fontWeight: 600, color: C.ink, fontFamily: DISP, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,.04)" }}>{o}</button>; })}
+        </div>
+      </div></Phone>
+    );
+  }
+
+  if (screen === "paywall") return <Paywall onSubscribe={() => { setPro(true); setScreen("app"); }} onClose={() => setScreen("app")} />;
+
+  return (
+    <Phone>{wrap(
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.grayBg, position: "relative", overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} />}
+          {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} />}
+          {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} />}
+        </div>
+        <TabBar tab={tab} setTab={setTab} t={t} />
+
+        {tab === "home" && <button onClick={() => setScanner(true)} style={{ position: "absolute", insetInlineEnd: 18, bottom: 78, width: 58, height: 58, borderRadius: 99, background: C.accent, border: "none", color: "#fff", display: "grid", placeItems: "center", boxShadow: "0 6px 18px rgba(255,122,77,.45)", cursor: "pointer" }}><Plus size={28} /></button>}
+
+        {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
+        {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} />}
+        {sheet === "coach" && <CoachSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} />}
+        {sheet === "referral" && <ReferralSheet onClose={() => setSheet(null)} />}
+        {sheet === "widgets" && <WidgetSheet onClose={() => setSheet(null)} calLeft={calLeft} consumed={consumed} target={target} macroTargets={macroTargets} streak={log.length} t={t} />}
+        {sheet === "goals" && <GoalsSheet onClose={() => setSheet(null)} current={{ calories: target, protein: macroTargets.protein, carbs: macroTargets.carbs, fat: macroTargets.fat }} onSave={(g) => { setGoals(g); setSheet(null); }} t={t} />}
+        {sheet === "lang" && <LangSheet onClose={() => setSheet(null)} lang={lang} setLang={(l) => { setLang(l); setSheet(null); }} title={t.language} />}
+        {sheet && sheet.edit && <EditSheet meal={sheet.edit} onClose={() => setSheet(null)} onSave={(m) => { updateMeal(sheet.edit.id, m); setSheet(null); }} onDelete={() => { removeMeal(sheet.edit.id); setSheet(null); }} />}
+      </div>
+    )}</Phone>
+  );
+}
+
+const SCAN_MODES = [
+  { key: "food", icon: Camera, labelKey: "food" },
+  { key: "barcode", icon: ScanBarcode, labelKey: "barcode" },
+  { key: "label", icon: ScanLine, labelKey: "foodLabel" },
+  { key: "fridge", icon: Refrigerator, labelKey: "fridge" },
+];
+function Scanner({ onClose, onAddMeal, onSearch, t }) {
+  const [mode, setMode] = useState("food");
+  const [analyzer, setAnalyzer] = useState(null);
+  const fileRef = useRef(null);
+  const titles = { food: t.scanMeal, barcode: t.scanBarcode, label: t.scanLabel, fridge: t.scanFridge };
+  const subs = { food: "Center your meal in the frame", barcode: t.alignBarcode, label: "Fit the nutrition label in the frame", fridge: "Capture your fridge - we'll suggest meals" };
+
+  const onFile = async (e) => {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const b64 = await toB64(file); const dataUrl = await toDataUrl(file);
+    setAnalyzer({ img: dataUrl, status: "analyzing", pct: 12 });
+    analyze(b64, file.type, dataUrl, mode);
+  };
+  const analyze = async (b64, media, dataUrl, m) => {
+    let p = 12; const tick = setInterval(() => { p = Math.min(p + 9, 92); setAnalyzer((a) => (a ? { ...a, pct: p } : a)); }, 350);
+    const prompts = {
+      food: 'Identify this food and estimate nutrition. Respond ONLY raw JSON: {"name": string (max 4 words), "calories": number, "protein": number, "carbs": number, "fat": number}',
+      barcode: 'This is a product barcode/package. Identify the product and per-serving nutrition. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
+      label: 'This is a nutrition facts label. Read the per-serving values. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
+      fridge: 'This is a photo of fridge contents. Suggest ONE simple meal from what you see and give its nutrition. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
+    };
+    try {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: media || "image/jpeg", data: b64 } }, { type: "text", text: prompts[m] }] }] }) });
+      const data = await resp.json();
+      const text = data.content.filter((i) => i.type === "text").map((i) => i.text).join("");
+      const r = JSON.parse(text.replace(/```json|```/g, "").trim());
+      clearInterval(tick); setAnalyzer({ img: dataUrl, status: "done", result: r });
+    } catch (e) { clearInterval(tick); setAnalyzer({ img: dataUrl, status: "error" }); }
+  };
+  const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), img: analyzer.img }); if (ok) onClose(); };
+
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#0A0A0A", zIndex: 40, display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#3a3a3a,#1a1a1a 60%,#0a0a0a)" }} />
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", zIndex: 2 }}>
+        <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 99, background: "rgba(255,255,255,.15)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><X size={20} color="#fff" /></button>
+        <button style={{ width: 36, height: 36, borderRadius: 99, background: "rgba(255,255,255,.15)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Zap size={18} color="#fff" /></button>
+      </div>
+      <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+        {!analyzer && (
+          <React.Fragment>
+            <div style={{ position: "relative", width: 250, height: 250 }}>
+              <div style={{ position: "absolute", left: 0, top: 0, width: 44, height: 44, borderTop: "4px solid #fff", borderLeft: "4px solid #fff", borderTopLeftRadius: 10 }} />
+              <div style={{ position: "absolute", right: 0, top: 0, width: 44, height: 44, borderTop: "4px solid #fff", borderRight: "4px solid #fff", borderTopRightRadius: 10 }} />
+              <div style={{ position: "absolute", left: 0, bottom: 0, width: 44, height: 44, borderBottom: "4px solid #fff", borderLeft: "4px solid #fff", borderBottomLeftRadius: 10 }} />
+              <div style={{ position: "absolute", right: 0, bottom: 0, width: 44, height: 44, borderBottom: "4px solid #fff", borderRight: "4px solid #fff", borderBottomRightRadius: 10 }} />
+              {mode === "barcode" && <div style={{ position: "absolute", top: "50%", left: 12, right: 12, height: 2, background: C.accent, boxShadow: "0 0 12px " + C.accent }} />}
+            </div>
+            <div style={{ color: "#fff", fontWeight: 800, fontSize: 22, marginTop: 26, fontFamily: DISP }}>{titles[mode]}</div>
+            <div style={{ color: "rgba(255,255,255,.7)", fontSize: 14, marginTop: 6 }}>{subs[mode]}</div>
+            <button onClick={() => fileRef.current && fileRef.current.click()} style={{ marginTop: 26, width: 74, height: 74, borderRadius: 99, background: "#fff", border: "5px solid rgba(255,255,255,.4)", cursor: "pointer" }} />
+          </React.Fragment>
+        )}
+        {analyzer && (
+          <div style={{ width: "86%", background: "#fff", borderRadius: 22, padding: 16 }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <div style={{ position: "relative", width: 90, height: 90, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}>
+                <img src={analyzer.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                {analyzer.status === "analyzing" && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.4)", display: "grid", placeItems: "center", color: "#fff", fontWeight: 700 }}>{analyzer.pct}%</div>}
+              </div>
+              <div style={{ flex: 1 }}>
+                {analyzer.status === "analyzing" && <div style={{ color: C.ink, fontWeight: 600 }}>Analyzing...</div>}
+                {analyzer.status === "error" && <div style={{ color: C.protein, fontWeight: 600 }}>Couldn't read that. Try again.</div>}
+                {analyzer.status === "done" && (
+                  <div>
+                    <div style={{ fontWeight: 700, color: C.ink, fontSize: 16 }}>{foodEmoji(analyzer.result.name)} {analyzer.result.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0", color: C.ink }}><Flame size={14} color={C.flame} fill={C.flame} /> {Math.round(analyzer.result.calories)} cal</div>
+                    <div style={{ display: "flex", gap: 10, fontSize: 12, color: C.sub }}><span><b style={{ color: C.protein }}>{"\u25CF"}</b> {Math.round(analyzer.result.protein)}g</span><span><b style={{ color: C.carbs }}>{"\u25CF"}</b> {Math.round(analyzer.result.carbs)}g</span><span><b style={{ color: C.fat }}>{"\u25CF"}</b> {Math.round(analyzer.result.fat)}g</span></div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {analyzer.status === "done" && <div style={{ display: "flex", gap: 10, marginTop: 14 }}><button onClick={confirm} style={{ flex: 1, background: C.accent, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Add to log</button><button onClick={() => setAnalyzer(null)} style={{ background: C.grayBg, color: C.ink, border: "none", borderRadius: 12, padding: "13px 16px", fontWeight: 600, cursor: "pointer" }}>Retry</button></div>}
+            {analyzer.status === "error" && <button onClick={() => setAnalyzer(null)} style={{ width: "100%", marginTop: 14, background: C.ink, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Back</button>}
+          </div>
+        )}
+      </div>
+      {!analyzer && (
+        <div style={{ position: "relative", zIndex: 2, display: "flex", gap: 8, padding: "14px 16px 30px", justifyContent: "center" }}>
+          {SCAN_MODES.map((m) => { const sel = mode === m.key; const Icon = m.icon; return (
+            <button key={m.key} onClick={() => setMode(m.key)} style={{ flex: 1, maxWidth: 90, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "10px 6px", borderRadius: 14, border: sel ? "1.5px solid #fff" : "1.5px solid transparent", background: sel ? "rgba(255,255,255,.12)" : "transparent", cursor: "pointer" }}>
+              <Icon size={20} color="#fff" /><span style={{ color: "#fff", fontSize: 12, fontWeight: sel ? 700 : 500 }}>{t[m.labelKey]}</span>
+            </button>
+          ); })}
+        </div>
+      )}
+      {!analyzer && <button onClick={onSearch} style={{ position: "absolute", bottom: 96, insetInlineStart: 18, zIndex: 3, background: "rgba(255,255,255,.15)", border: "none", borderRadius: 99, width: 40, height: 40, display: "grid", placeItems: "center", cursor: "pointer" }}><Search size={18} color="#fff" /></button>}
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onFile} style={{ display: "none" }} />
+    </div>
+  );
+}
+
+function GoalsSheet({ onClose, current, onSave, t }) {
+  const [g, setG] = useState(current);
+  const Row = ({ label, k, step, color }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid #F0EADF" }}>
+      <span style={{ color: C.ink, fontWeight: 600 }}><b style={{ color }}>{"\u25CF"}</b> {label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button onClick={() => setG({ ...g, [k]: Math.max(0, g[k] - step) })} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button>
+        <span style={{ minWidth: 56, textAlign: "center", fontWeight: 800, fontSize: 18, color: C.ink }}>{g[k]}</span>
+        <button onClick={() => setG({ ...g, [k]: g[k] + step })} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={18} color="#fff" /></button>
+      </div>
+    </div>
+  );
+  return (
+    <Sheet onClose={onClose} title={t.editGoals}>
+      <Row label={t.dailyTarget + " (cal)"} k="calories" step={50} color={C.flame} />
+      <Row label={t.protein + " (g)"} k="protein" step={5} color={C.protein} />
+      <Row label={t.carbs + " (g)"} k="carbs" step={5} color={C.carbs} />
+      <Row label={t.fat + " (g)"} k="fat" step={5} color={C.fat} />
+      <button onClick={() => onSave(g)} style={{ width: "100%", marginTop: 20, background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>{t.save}</button>
+    </Sheet>
+  );
+}
+
+function LangSheet({ onClose, lang, setLang, title }) {
+  return (
+    <Sheet onClose={onClose} title={title}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {LANGS.map((l) => { const sel = lang === l.code; return (
+          <button key={l.code} onClick={() => setLang(l.code)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 14, border: "2px solid " + (sel ? C.accent : "#F0EADF"), background: "#fff", cursor: "pointer" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 12, fontWeight: 600, color: C.ink }}><span style={{ fontSize: 24 }}>{l.flag}</span> {l.name}</span>
+            {sel && <Check size={20} color={C.accent} />}
+          </button>
+        ); })}
+      </div>
+    </Sheet>
+  );
+}
+
+function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell }) {
+  const over = calLeft < 0;
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const today = new Date();
+  const dateNums = days.map((_, i) => today.getDate() - today.getDay() + 1 + i);
+  const todayIdx = (today.getDay() + 6) % 7;
+  const dayLabel = dayOffset === 0 ? t.today : dayOffset === -1 ? t.yesterday : Math.abs(dayOffset) + "d";
+
+  return (
+    <div style={{ padding: "18px 16px 90px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><NibblMark size={38} /><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 20, color: C.ink }}>Nibbl</span>{pro && <span style={{ background: C.ink, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>PRO</span>}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", borderRadius: 99, padding: "6px 12px", boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><Flame size={16} color={C.flame} fill={C.flame} /><span style={{ fontWeight: 700, color: C.ink }}>{log.length}</span></div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <button onClick={() => setDayOffset(dayOffset - 1)} style={{ border: "none", background: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><ChevronLeft size={18} color={C.ink} /></button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: C.ink }}><Calendar size={16} color={C.accent} /> {dayLabel}</div>
+        <button onClick={() => dayOffset < 0 && setDayOffset(dayOffset + 1)} disabled={dayOffset === 0} style={{ border: "none", background: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: dayOffset === 0 ? "default" : "pointer", opacity: dayOffset === 0 ? 0.4 : 1, boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><ChevronRight size={18} color={C.ink} /></button>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
+        {days.map((d, i) => (<div key={i} style={{ textAlign: "center" }}><div style={{ width: 38, height: 38, borderRadius: 99, border: "1.5px " + (i === todayIdx ? "solid" : "dashed") + " " + (i === todayIdx ? C.ink : "#CDD2D8"), display: "grid", placeItems: "center", fontWeight: 700, color: C.ink, fontSize: 14 }}>{d}</div><div style={{ fontSize: 13, color: C.sub, marginTop: 4, fontWeight: i === todayIdx ? 700 : 400 }}>{dateNums[i]}</div></div>))}
+      </div>
+      <Card style={{ padding: 20, display: "flex", alignItems: "center", gap: 18, marginBottom: 14 }}>
+        <GradientRing pct={Math.min(consumed.cal / target, 1)} value={Math.abs(calLeft)} label={over ? t.caloriesOver : t.caloriesLeft} over={over} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 13 }}>
+          <MacroBar label={t.protein} have={consumed.p} goal={macroTargets.protein} color={C.protein} track="#FDECEC" />
+          <MacroBar label={t.carbs} have={consumed.c} goal={macroTargets.carbs} color={C.carbs} track="#FCF1E2" />
+          <MacroBar label={t.fat} have={consumed.f} goal={macroTargets.fat} color={C.fat} track="#E8F3FD" />
+        </div>
+      </Card>
+      <Card style={{ padding: 16, marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 8 }}><GlassWater size={18} color={C.water} /><span style={{ fontWeight: 700, color: C.ink }}>{t.water}</span></div><span style={{ color: C.sub, fontSize: 14 }}>{water}/{waterGoal} {t.glasses}</span></div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>{Array.from({ length: waterGoal }).map((_, i) => (<button key={i} onClick={() => setWater(i + 1 === water ? i : i + 1)} style={{ flex: 1, height: 30, border: "none", borderRadius: 8, cursor: "pointer", background: i < water ? C.water : "#E9EDF2" }} />))}<button onClick={() => setWater(water + 1)} style={{ border: "none", background: C.water, color: "#fff", width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", cursor: "pointer" }}><Plus size={16} /></button></div>
+      </Card>
+      <button onClick={onCoach} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#2A2A3A,#1B2A2A)", borderRadius: 18, padding: 16, marginBottom: 18, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,.12)", display: "grid", placeItems: "center" }}><Sparkles size={20} color={C.accent} /></div>
+        <div style={{ flex: 1 }}><div style={{ color: "#fff", fontWeight: 700 }}>{t.askCoach} {!pro && <Lock size={12} style={{ verticalAlign: "middle" }} />}</div><div style={{ color: "rgba(255,255,255,.65)", fontSize: 13 }}>{t.coachSub}</div></div>
+      </button>
+      <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.ink, marginBottom: 10 }}>{dayOffset === 0 ? t.todaysLog : t.log}</div>
+      {!pro && dayOffset === 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF1E9", border: "1px solid " + C.accent + "33", borderRadius: 16, padding: "12px 14px", marginBottom: 10 }}><span style={{ fontSize: 13, color: C.ink }}>{Math.max(3 - log.length, 0)} free scans left</span><button onClick={onUpsell} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 99, padding: "6px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Pro</button></div>}
+      {log.length === 0 && <Card style={{ padding: 24, textAlign: "center", color: C.sub }}>{t.noMeals}</Card>}
+      {log.map((m) => (
+        <Card key={m.id} style={{ padding: 12, display: "flex", gap: 12, marginBottom: 10, alignItems: "center" }}>
+          {m.img ? <img src={m.img} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover" }} /> : <div style={{ width: 64, height: 64, borderRadius: 12, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 30 }}>{foodEmoji(m.name)}</div>}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontWeight: 700, color: C.ink }}>{m.name}</span><button onClick={() => onEdit(m)} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.sub, display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}><Pencil size={13} /> {m.time}</button></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, margin: "4px 0", color: C.ink }}><Flame size={14} color={C.flame} fill={C.flame} /> {m.calories} cal</div>
+            <div style={{ display: "flex", gap: 12, fontSize: 13, color: C.sub }}><span><b style={{ color: C.protein }}>{"\u25CF"}</b> {m.protein}g</span><span><b style={{ color: C.carbs }}>{"\u25CF"}</b> {m.carbs}g</span><span><b style={{ color: C.fat }}>{"\u25CF"}</b> {m.fat}g</span></div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function SearchSheet({ onClose, onPick }) {
+  const [q, setQ] = useState("");
+  const results = FOOD_DB.filter((f) => f.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <Sheet onClose={onClose} title="Search food">
+      <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.grayBg, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}><Search size={18} color={C.sub} /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search foods..." style={{ border: "none", background: "transparent", outline: "none", flex: 1, fontSize: 16, color: C.ink }} /></div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto" }}>
+        {results.map((f) => (<button key={f.name} onClick={() => onPick(f)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #F0EADF", background: "#fff", cursor: "pointer", textAlign: "left" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 22 }}>{foodEmoji(f.name)}</div><div><div style={{ fontWeight: 600, color: C.ink }}>{f.name}</div><div style={{ fontSize: 12, color: C.sub }}>{f.protein}p {f.carbs}c {f.fat}f</div></div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700, color: C.ink }}>{f.calories}</span><Plus size={18} color={C.accent} /></div></button>))}
+        {results.length === 0 && <div style={{ textAlign: "center", color: C.sub, padding: 20 }}>No matches.</div>}
+      </div>
+    </Sheet>
+  );
+}
+
+function EditSheet({ meal, onClose, onSave, onDelete }) {
+  const [mult, setMult] = useState(1);
+  const scaled = (v) => Math.round(v * mult);
+  return (
+    <Sheet onClose={onClose} title="Edit entry">
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}><div style={{ width: 44, height: 44, borderRadius: 11, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 24 }}>{foodEmoji(meal.name)}</div><div style={{ fontWeight: 700, fontSize: 18, color: C.ink }}>{meal.name}</div></div>
+      <div style={{ color: C.sub, fontSize: 14, margin: "10px 0 18px" }}>Adjust portion size</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginBottom: 18 }}>
+        <button onClick={() => setMult(Math.max(0.25, +(mult - 0.25).toFixed(2)))} style={{ width: 44, height: 44, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={20} color={C.ink} /></button>
+        <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, minWidth: 70, textAlign: "center" }}>{mult}x</div>
+        <button onClick={() => setMult(+(mult + 0.25).toFixed(2))} style={{ width: 44, height: 44, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={20} color="#fff" /></button>
+      </div>
+      <Card style={{ padding: 16, marginBottom: 18, display: "flex", justifyContent: "space-around", textAlign: "center" }}>{[["Cal", scaled(meal.calories), C.ink], ["P", scaled(meal.protein), C.protein], ["C", scaled(meal.carbs), C.carbs], ["F", scaled(meal.fat), C.fat]].map((row) => (<div key={row[0]}><div style={{ fontWeight: 800, color: row[2], fontSize: 18 }}>{row[1]}</div><div style={{ fontSize: 12, color: C.sub }}>{row[0]}</div></div>))}</Card>
+      <div style={{ display: "flex", gap: 10 }}><button onClick={() => onSave({ calories: scaled(meal.calories), protein: scaled(meal.protein), carbs: scaled(meal.carbs), fat: scaled(meal.fat) })} style={{ flex: 1, background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 14, fontWeight: 700, cursor: "pointer" }}>Save</button><button onClick={onDelete} style={{ background: "#FFEAEA", color: C.protein, border: "none", borderRadius: 14, padding: "14px 18px", fontWeight: 700, cursor: "pointer" }}>Delete</button></div>
+    </Sheet>
+  );
+}
+
+function CoachSheet({ onClose, consumed, target, macroTargets }) {
+  const [msgs, setMsgs] = useState([{ role: "assistant", text: "Hi! I'm your Nibbl coach. Ask me anything about your nutrition today." }]);
+  const [input, setInput] = useState(""); const [loading, setLoading] = useState(false);
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = input.trim(); setInput(""); setMsgs((m) => [...m, { role: "user", text: userMsg }]); setLoading(true);
+    const ctx = "Daily target: " + target + " cal. Consumed: " + consumed.cal + " cal, " + consumed.p + "g protein, " + consumed.c + "g carbs, " + consumed.f + "g fat. Targets: " + macroTargets.protein + "g P, " + macroTargets.carbs + "g C, " + macroTargets.fat + "g F.";
+    try {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages: [{ role: "user", content: "You are a friendly, concise nutrition coach. " + ctx + "\n\nUser: " + userMsg + "\n\nShort practical answer (2-3 sentences). Not medical advice." }] }) });
+      const data = await resp.json(); const text = data.content.filter((i) => i.type === "text").map((i) => i.text).join("");
+      setMsgs((m) => [...m, { role: "assistant", text }]);
+    } catch (e) { setMsgs((m) => [...m, { role: "assistant", text: "Couldn't reach the coach. Try again." }]); }
+    setLoading(false);
+  };
+  return (
+    <Sheet onClose={onClose} title="AI Coach">
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 300, overflowY: "auto", marginBottom: 12 }}>{msgs.map((m, i) => (<div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "82%", background: m.role === "user" ? C.accent : C.grayBg, color: m.role === "user" ? "#fff" : C.ink, padding: "10px 14px", borderRadius: 16, fontSize: 14, lineHeight: 1.4 }}>{m.text}</div>))}{loading && <div style={{ alignSelf: "flex-start", color: C.sub, fontSize: 14, padding: "4px 8px" }}>Coach is typing...</div>}</div>
+      <div style={{ display: "flex", gap: 8 }}><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask your coach..." style={{ flex: 1, border: "1px solid #F0EADF", borderRadius: 14, padding: "12px 14px", outline: "none", fontSize: 15 }} /><button onClick={send} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Send</button></div>
+      <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 10 }}>Not medical advice.</div>
+    </Sheet>
+  );
+}
+
+function ReferralSheet({ onClose }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Sheet onClose={onClose} title="Invite friends">
+      <div style={{ textAlign: "center", padding: "8px 0 18px" }}><div style={{ display: "inline-grid", placeItems: "center", width: 64, height: 64, borderRadius: 20, background: "#FFF1E9", marginBottom: 12 }}><Gift size={30} color={C.accent} /></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 20, color: C.ink }}>Give a month, get a month</div><div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>Friends get Pro at $7.99/mo. You get a free month when they subscribe.</div></div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "2px dashed " + C.accent, borderRadius: 14, padding: "14px 18px", marginBottom: 14 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink, letterSpacing: 1 }}>NIBBL-FOX42</span><button onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontWeight: 700, cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button></div>
+      <button onClick={onClose} style={{ width: "100%", background: C.ink, color: "#fff", border: "none", borderRadius: 14, padding: 14, fontWeight: 700, cursor: "pointer" }}>Share invite</button>
+    </Sheet>
+  );
+}
+
+function Paywall({ onSubscribe, onClose }) {
+  const [plan, setPlan] = useState("yearly");
+  const plans = { yearly: { price: "$29.99", per: "/year", note: "$2.50/mo - Save 75%" }, monthly: { price: "$9.99", per: "/month", note: "Billed monthly" } };
+  const features = ["Unlimited AI photo scans", "Barcode, label & fridge scan", "AI nutrition coach", "Home & Lock Screen widgets", "Editable goals & history"];
+  return (
+    <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, padding: "20px 22px", overflowY: "auto" }}>
+      <button onClick={onClose} style={{ alignSelf: "flex-end", border: "none", background: "transparent", color: C.sub, fontSize: 22, cursor: "pointer" }}>{"\u2715"}</button>
+      <div style={{ textAlign: "center", marginTop: 4 }}><NibblMark size={62} radius={18} /></div>
+      <h1 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, textAlign: "center", margin: "16px 0 4px" }}>Nibbl Pro</h1>
+      <p style={{ textAlign: "center", color: C.sub, margin: "0 0 22px" }}>Track everything. Hit your goal faster.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>{features.map((f) => (<div key={f} style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 24, height: 24, borderRadius: 99, background: C.accent, display: "grid", placeItems: "center" }}><Check size={15} color="#fff" /></div><span style={{ color: C.ink, fontWeight: 500 }}>{f}</span></div>))}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{["yearly", "monthly"].map((k) => { const sel = plan === k; return (<button key={k} onClick={() => setPlan(k)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderRadius: 18, border: "2px solid " + (sel ? C.accent : "#EFE6D8"), background: sel ? "#fff" : "transparent", cursor: "pointer", position: "relative" }}><div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, color: C.ink, fontSize: 17, textTransform: "capitalize" }}>{k}</div><div style={{ fontSize: 13, color: C.sub }}>{plans[k].note}</div></div><div style={{ fontWeight: 800, color: C.ink, fontSize: 20 }}>{plans[k].price}<span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>{plans[k].per}</span></div>{k === "yearly" && <div style={{ position: "absolute", top: -10, right: 16, background: C.accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>BEST VALUE</div>}</button>); })}</div>
+      <button onClick={onSubscribe} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 30, padding: "20px", fontSize: 19, fontWeight: 700, fontFamily: DISP, boxShadow: "0 8px 0 " + C.accentDark, cursor: "pointer", marginBottom: 10 }}>{"Start " + (plan === "yearly" ? "Yearly" : "Monthly")}</button>
+      <div style={{ textAlign: "center", fontSize: 12, color: C.sub, marginBottom: 6 }}>Cancel anytime - Restore - Terms - Privacy</div>
+      <div style={{ textAlign: "center", fontSize: 11, color: C.sub, marginBottom: 14 }}>Nibbl does not provide medical advice and is not a substitute for a physician.</div>
+    </div></Phone>
+  );
+}
+
+function WidgetSheet({ onClose, calLeft, consumed, target, macroTargets, streak, t }) {
+  return (
+    <Sheet onClose={onClose} title={t.widgets} sub="Add Nibbl to your Home & Lock Screen.">
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Home Screen</div>
+      <div style={{ background: "linear-gradient(160deg,#FFD9A0,#FF9E7D)", borderRadius: 22, padding: 18, display: "flex", gap: 14, marginBottom: 24 }}>
+        <div style={{ width: 130, height: 130, background: "#fff", borderRadius: 22, padding: 14, boxShadow: "0 6px 18px rgba(0,0,0,.15)" }}><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><NibblMark size={20} radius={6} /><span style={{ fontSize: 12, fontWeight: 700, color: C.ink }}>Nibbl</span></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 30, color: C.ink, lineHeight: 1 }}>{Math.abs(calLeft)}</div><div style={{ fontSize: 12, color: C.sub }}>{calLeft < 0 ? "cal over" : "cal left"}</div><div style={{ display: "flex", gap: 4, marginTop: 10 }}><Bar c={C.protein} /><Bar c={C.carbs} /><Bar c={C.fat} /></div></div>
+        <div style={{ flex: 1, height: 130, background: "#fff", borderRadius: 22, padding: 14, boxShadow: "0 6px 18px rgba(0,0,0,.15)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 12, fontWeight: 700, color: C.ink }}>{t.today}</span><span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12, color: C.ink }}><Flame size={12} color={C.flame} fill={C.flame} />{streak}</span></div><div style={{ display: "flex", gap: 8 }}>{[[t.protein, consumed.p, macroTargets.protein, C.protein], [t.carbs, consumed.c, macroTargets.carbs, C.carbs], [t.fat, consumed.f, macroTargets.fat, C.fat]].map((row) => (<div key={row[0]} style={{ flex: 1, textAlign: "center" }}><div style={{ fontWeight: 800, color: C.ink, fontSize: 15 }}>{Math.max(row[2] - row[1], 0)}</div><div style={{ fontSize: 10, color: C.sub }}>{row[0]}</div><div style={{ height: 4, borderRadius: 9, background: "#EEE", marginTop: 4 }}><div style={{ width: Math.min((row[1] / row[2]) * 100, 100) + "%", height: "100%", background: row[3], borderRadius: 9 }} /></div></div>))}</div></div>
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Lock Screen</div>
+      <div style={{ background: "linear-gradient(160deg,#2A2A3A,#11111A)", borderRadius: 22, padding: "22px 18px", marginBottom: 8 }}><div style={{ color: "#fff", textAlign: "center", fontWeight: 300, fontSize: 13, opacity: .7, marginBottom: 4 }}>Monday, June 29</div><div style={{ color: "#fff", textAlign: "center", fontWeight: 200, fontSize: 56, lineHeight: 1, marginBottom: 18 }}>10:09</div><div style={{ display: "flex", gap: 14, justifyContent: "center" }}><div style={{ width: 64, textAlign: "center" }}><div style={{ width: 56, height: 56, margin: "0 auto", borderRadius: 99, border: "4px solid rgba(255,255,255,.25)", borderTopColor: C.accent, display: "grid", placeItems: "center" }}><Flame size={18} color="#fff" fill="#fff" /></div><div style={{ color: "#fff", fontSize: 11, marginTop: 4, opacity: .85 }}>{Math.abs(calLeft)} left</div></div><div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.12)", borderRadius: 14, padding: "8px 14px" }}><NibblMark size={22} radius={7} /><div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{Math.abs(calLeft)} cal {calLeft < 0 ? "over" : "left"}</div><div style={{ color: "rgba(255,255,255,.7)", fontSize: 11 }}>P {consumed.p} C {consumed.c} F {consumed.f}</div></div></div></div></div>
+    </Sheet>
+  );
+}
+const Bar = ({ c }) => <div style={{ flex: 1, height: 6, borderRadius: 9, background: c, opacity: .85 }} />;
+
+function ProgressTab({ weights, setWeights, totalCal, log, t }) {
+  const last = weights[weights.length - 1] ? weights[weights.length - 1].kg : 0;
+  const min = Math.min.apply(null, weights.map((w) => w.kg)); const max = Math.max.apply(null, weights.map((w) => w.kg)); const range = max - min || 1;
+  const logWeight = () => { const v = prompt("Log weight (kg)"); const n = parseFloat(v); if (!isNaN(n)) { const d = new Date(); setWeights((w) => [...w, { date: (d.getMonth() + 1) + "/" + d.getDate(), kg: n }]); } };
+  return (
+    <div style={{ padding: "18px 16px 90px" }}>
+      <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink, marginBottom: 16 }}>{t.progress}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <Card style={{ padding: 18, textAlign: "center" }}><Ring pct={0.7} size={70}><Scale size={22} color={C.ink} /></Ring><div style={{ color: C.sub, fontSize: 14, marginTop: 10 }}>Last weight</div><div style={{ fontWeight: 800, fontSize: 22, color: C.ink }}>{last} kg</div><button onClick={logWeight} style={{ marginTop: 10, background: C.ink, color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, cursor: "pointer" }}>Log Weight</button></Card>
+        <Card style={{ padding: 18, textAlign: "center" }}><Ring pct={log.length / 7} size={70}><NibblMark size={28} radius={9} /></Ring><div style={{ color: C.sub, fontSize: 14, marginTop: 10 }}>Days logged</div><div style={{ fontWeight: 800, fontSize: 22, color: C.ink }}>{Math.min(log.length, 7)}/7</div></Card>
+      </div>
+      <Card style={{ padding: 18, marginBottom: 14 }}><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.ink, marginBottom: 12 }}>Weight Progress</div><svg viewBox="0 0 300 150" style={{ width: "100%", height: 150 }}>{[0, 0.25, 0.5, 0.75, 1].map((g) => <line key={g} x1="0" x2="300" y1={150 * g} y2={150 * g} stroke="#EFEFEF" />)}<polyline fill="none" stroke={C.accent} strokeWidth="3" strokeLinecap="round" points={weights.map((w, i) => ((i / (weights.length - 1 || 1)) * 280 + 10) + "," + (140 - ((w.kg - min) / range) * 120)).join(" ")} />{weights.map((w, i) => <circle key={i} cx={(i / (weights.length - 1 || 1)) * 280 + 10} cy={140 - ((w.kg - min) / range) * 120} r="5" fill={C.accent} />)}</svg><div style={{ display: "flex", justifyContent: "space-between", color: C.sub, fontSize: 13, marginTop: 4 }}><span>{weights[0] && weights[0].date}</span><span>{weights[weights.length - 1] && weights[weights.length - 1].date}</span></div></Card>
+      <Card style={{ padding: 18 }}><div style={{ color: C.sub, fontSize: 15 }}>Total Calories</div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 32, color: C.ink }}>{totalCal}</div></Card>
+    </div>
+  );
+}
+
+function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, onWidgets, onReferral, onEditGoals, onLang }) {
+  const cur = LANGS.find((l) => l.code === lang);
+  return (
+    <div style={{ padding: "18px 16px 90px" }}>
+      <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink, marginBottom: 16 }}>{t.settings}</div>
+      {!pro ? (<button onClick={onUpsell} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", background: "linear-gradient(135deg, " + C.accent + ", " + C.accentDark + ")", borderRadius: 20, padding: 18, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}><div><div style={{ color: "#fff", fontWeight: 800, fontSize: 18, fontFamily: DISP }}>{t.upgrade}</div><div style={{ color: "rgba(255,255,255,.85)", fontSize: 13 }}>Unlimited scans - coach - widgets</div></div><Lock size={22} color="#fff" /></button>) : (<Card style={{ padding: 18, marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}><NibblMark size={36} /><div><div style={{ fontWeight: 800, color: C.ink, fontSize: 16 }}>Nibbl Pro active</div><div style={{ fontSize: 13, color: C.sub }}>Thanks for supporting Nibbl.</div></div></Card>)}
+      <Card style={{ overflow: "hidden", marginBottom: 14 }}>
+        <button onClick={onEditGoals} style={{ width: "100%", border: "none", background: "transparent", cursor: "pointer", padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ color: C.ink, fontWeight: 700 }}>{t.editGoals}</span><span style={{ color: C.accent, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}><Pencil size={14} /> {t.dailyTarget}</span></button>
+        <div style={{ display: "flex", justifyContent: "space-around", padding: "0 18px 16px", textAlign: "center" }}>{[[target + "", "cal", C.flame], [macroTargets.protein + "g", t.protein, C.protein], [macroTargets.carbs + "g", t.carbs, C.carbs], [macroTargets.fat + "g", t.fat, C.fat]].map((row) => (<div key={row[1]}><div style={{ fontWeight: 800, fontSize: 17, color: C.ink }}><b style={{ color: row[2], fontSize: 11 }}>{"\u25CF"}</b> {row[0]}</div><div style={{ fontSize: 11, color: C.sub }}>{row[1]}</div></div>))}</div>
+      </Card>
+      <Card style={{ overflow: "hidden", marginBottom: 14 }}>
+        <SettingRow label={t.language} action={cur.flag + " " + cur.name} onClick={onLang} icon={<Globe size={18} color={C.sub} />} />
+        <SettingRow label={t.widgets} action={"\u203A"} onClick={onWidgets} top />
+        <SettingRow label={t.invite} action={"\u203A"} onClick={onReferral} top />
+      </Card>
+      <Card style={{ overflow: "hidden" }}>
+        {[[t.goal, answers.goal || "-"], [t.sex, answers.sex || "-"], [t.activity, answers.activity || "-"], [t.pace, answers.pace || "-"]].map((row, i) => (<div key={row[0]} style={{ display: "flex", justifyContent: "space-between", padding: "16px 18px", borderTop: i ? "1px solid #F0EADF" : "none" }}><span style={{ color: C.sub }}>{row[0]}</span><span style={{ color: C.ink, fontWeight: 600 }}>{row[1]}</span></div>))}
+      </Card>
+      <div style={{ fontSize: 12, color: C.sub, textAlign: "center", padding: "14px 20px" }}>Nibbl does not provide medical advice and is not a substitute for consulting a physician.</div>
+    </div>
+  );
+}
+function SettingRow({ label, action, onClick, top, icon }) {
+  return <button onClick={onClick} style={{ width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderTop: top ? "1px solid #F0EADF" : "none" }}><span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}>{icon}{label}</span><span style={{ color: C.accent, fontWeight: 700 }}>{action}</span></button>;
+}
+
+function Phone({ children }) {
+  React.useEffect(() => {
+    if (document.getElementById("nibbl-fonts")) return;
+    const l = document.createElement("link");
+    l.id = "nibbl-fonts";
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap";
+    document.head.appendChild(l);
+  }, []);
+  return (
+    <div style={{ minHeight: "100vh", background: "#111", display: "grid", placeItems: "center", padding: 12, fontFamily: BODY }}>
+      <div style={{ width: 390, height: 844, background: "#000", borderRadius: 46, padding: 8, boxShadow: "0 40px 80px -28px rgba(27,42,42,.45), 0 14px 30px rgba(27,42,42,.16)" }}>
+        <div style={{ width: "100%", height: "100%", background: "#fff", borderRadius: 40, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative", fontFamily: BODY }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+function Sheet({ children, onClose, title, sub }) {
+  return (
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "flex-end", zIndex: 30 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", borderRadius: "26px 26px 0 0", padding: "16px 18px 28px", maxHeight: "85%", overflowY: "auto" }}>
+        <div style={{ width: 40, height: 5, background: "#D8D8DE", borderRadius: 99, margin: "0 auto 16px" }} />
+        {title && <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 20, color: C.ink, marginBottom: sub ? 4 : 16 }}>{title}</div>}
+        {sub && <div style={{ color: C.sub, fontSize: 14, marginBottom: 18 }}>{sub}</div>}
+        {children}
+      </div>
+    </div>
+  );
+}
+function Card({ children, style }) { return <div style={{ background: "#fff", borderRadius: 22, border: "1px solid " + C.border, boxShadow: "0 4px 18px -6px rgba(27,42,42,.08)", ...style }}>{children}</div>; }
+function MacroCard({ value, color, icon, label, t }) {
+  const over = value < 0;
+  return <Card style={{ padding: 14, textAlign: "center" }}><div style={{ fontWeight: 700, fontSize: 17, color: C.ink, marginBottom: 8 }}>{Math.abs(value)}g</div><div style={{ width: 52, height: 52, margin: "0 auto", borderRadius: 99, border: "3px solid " + color, display: "grid", placeItems: "center" }}>{icon}</div><div style={{ fontSize: 12, color: C.sub, marginTop: 8 }}>{label} {over ? t.over : t.left}</div></Card>;
+}
+function Ring({ pct, children, size, over }) {
+  size = size || 80;
+  const r = size / 2 - 6; const c = 2 * Math.PI * r;
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EDEDED" strokeWidth="6" /><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.ink} strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 1))} /></svg>
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: over ? C.ink : "transparent", borderRadius: 99, margin: 12 }}>{children}</div>
+    </div>
+  );
+}
+function GradientRing({ pct, value, label, over }) {
+  const size = 148, sw = 14, r = size / 2 - sw / 2 - 4, c = 2 * Math.PI * r;
+  const fmt = (n) => n.toLocaleString();
+  return (
+    <div style={{ position: "relative", width: size, height: size, flex: "none" }}>
+      <svg width={size} height={size} viewBox={"0 0 " + size + " " + size}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F0E8DA" strokeWidth={sw} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={over ? C.protein : "url(#nibblCoral)"} strokeWidth={sw} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 1))} transform={"rotate(-90 " + size / 2 + " " + size / 2 + ")"} />
+        <defs><linearGradient id="nibblCoral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={C.accentLight} /><stop offset="1" stopColor={C.accentDark} /></linearGradient></defs>
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 38, color: C.ink, lineHeight: 1, letterSpacing: "-.02em" }}>{fmt(value)}</div>
+        <div style={{ fontWeight: 600, fontSize: 11, color: C.ink, opacity: .5, marginTop: 2 }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+function MacroBar({ label, have, goal, color, track }) {
+  const pct = goal > 0 ? Math.min((have / goal) * 100, 100) : 0;
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ fontWeight: 600, fontSize: 12, color: C.ink }}>{label}</span>
+        <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: C.ink, opacity: .6 }}>{have}<span style={{ opacity: .6 }}>/{goal}g</span></span>
+      </div>
+      <div style={{ height: 7, borderRadius: 9, background: track, overflow: "hidden" }}><div style={{ width: pct + "%", height: "100%", borderRadius: 9, background: color }} /></div>
+    </div>
+  );
+}
+function TabBar({ tab, setTab, t }) {
+  const items = [["home", Home, t.home], ["progress", BarChart3, t.progress], ["settings", Settings, t.settings]];
+  return (
+    <div style={{ display: "flex", justifyContent: "space-around", padding: "12px 0 22px", background: "#fff", borderTop: "1px solid #F0EADF" }}>
+      {items.map((it) => { const Icon = it[1]; return (<button key={it[0]} onClick={() => setTab(it[0])} style={{ background: "none", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", color: tab === it[0] ? C.ink : C.sub }}><Icon size={22} /><span style={{ fontSize: 11, fontWeight: tab === it[0] ? 700 : 500 }}>{it[2]}</span></button>); })}
+    </div>
+  );
+}
+function MiniHomePreview({ target, t }) {
+  return (
+    <div style={{ width: 240, background: "rgba(255,255,255,.16)", borderRadius: 30, padding: 10, boxShadow: "0 20px 40px -16px rgba(120,30,0,.35)" }}>
+    <div style={{ width: "100%", borderRadius: 22, overflow: "hidden", background: "#fff", padding: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}><NibblMark size={24} radius={7} /><span style={{ fontWeight: 700, fontSize: 13, color: C.ink, fontFamily: BODY }}>Nibbl</span></div>
+      <Card style={{ padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}><div><div style={{ fontWeight: 800, fontSize: 26, color: C.ink, fontFamily: DISP }}>{target}</div><div style={{ fontSize: 11, color: C.sub, fontFamily: BODY }}>{t.caloriesLeft}</div></div><Ring pct={0} size={46}><Flame size={16} color={C.ink} /></Ring></Card>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>{[["263g", C.protein], ["350g", C.carbs], ["117g", C.fat]].map((row) => (<Card key={row[0]} style={{ padding: 8, textAlign: "center" }}><div style={{ fontWeight: 700, fontSize: 12, color: C.ink, fontFamily: DISP }}>{row[0]}</div><div style={{ width: 26, height: 26, margin: "4px auto 0", borderRadius: 99, border: "3px solid " + row[1] }} /></Card>))}</div>
+    </div>
+    </div>
+  );
+}
+const toB64 = (file) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.readAsDataURL(file); });
+const toDataUrl = (file) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
