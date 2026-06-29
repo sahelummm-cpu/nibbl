@@ -1,10 +1,12 @@
 import React, { useState, useRef } from "react";
-import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe } from "lucide-react";
+import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe, Heart, User, TrendingUp, TrendingDown } from "lucide-react";
 
 const C = {
   ink: "#1B2A2A", cream: "#FBF7F0", accent: "#FF7A4D", accentLight: "#FF8A5B", accentDark: "#E85F30",
   protein: "#F2545B", carbs: "#F2A03D", fat: "#4DA8F0", water: "#4DA8F0",
   flame: "#FF7A3D", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF",
+  pTrack: "#FDECEC", cTrack: "#FCF1E2", fTrack: "#E8F3FD",
+  pInk: "#C23B42", cInk: "#C57A1E", fInk: "#2C7EC0", ringTrack: "#F0E8DA",
 };
 const BODY = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const DISP = "Poppins, system-ui, sans-serif";
@@ -24,16 +26,36 @@ const T = {
   PT: { tagline: "Foto e pronto. Nibbl registra.", getStarted: "Comecar", haveAccount: "Ja tem conta?", signIn: "Entrar", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias a mais", protein: "Proteina", carbs: "Carbos", fat: "Gordura", left: "restante", over: "a mais", water: "Agua", glasses: "copos", askCoach: "Pergunte ao Coach IA", coachSub: "O que comer para bater minhas macros?", todaysLog: "Registro de hoje", log: "Registro", noMeals: "Sem refeicoes. Toque + para adicionar.", today: "Hoje", yesterday: "Ontem", addFood: "Adicionar", home: "Inicio", progress: "Progresso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Atividade", pace: "Ritmo", language: "Idioma", save: "Salvar", scanMeal: "Escanear refeicao", scanBarcode: "Escanear codigo", scanLabel: "Escanear rotulo", scanFridge: "Escanear geladeira", alignBarcode: "Alinhe o codigo no quadro", food: "Comida", barcode: "Codigo", foodLabel: "Rotulo", fridge: "Geladeira", upgrade: "Assine o Nibbl Pro", widgets: "Widgets de tela", invite: "Convide amigos - ganhe um mes gratis" },
 };
 
+// Detailed Nibbl fox (matches Nibbl.dc.html). Renders just the face, no tile.
+function FoxFace({ size = 64 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" style={{ display: "block", filter: "drop-shadow(0 6px 10px rgba(120,30,0,.25))" }}>
+      <path d="M30 44 L20 9 Q19 6 23 7 L56 28 Z" fill="#F4F0E8" /><path d="M90 44 L100 9 Q101 6 97 7 L64 28 Z" fill="#F4F0E8" />
+      <path d="M33 42 L26 18 Q25.5 15.5 28.5 17 L50 30 Z" fill="#E85F30" /><path d="M87 42 L94 18 Q94.5 15.5 91.5 17 L70 30 Z" fill="#E85F30" />
+      <path d="M24 42 C24 30 38 25 60 25 C82 25 96 30 96 42 C96 60 88 76 60 98 C32 76 24 60 24 42 Z" fill="#FBF7F0" />
+      <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 55 90 65 80 74 C72 65 66 60 60 60 C54 60 48 65 40 74 C30 65 25 55 25 41 Z" fill="#FF7A4D" />
+      <ellipse cx="44" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A" /><circle cx="45.6" cy="46" r="1.5" fill="#fff" />
+      <ellipse cx="76" cy="48" rx="4.6" ry="5.6" fill="#1B2A2A" /><circle cx="77.6" cy="46" r="1.5" fill="#fff" />
+      <path d="M60 70 L53.5 63 Q60 60.5 66.5 63 Z" fill="#1B2A2A" /><path d="M60 70 L60 78" stroke="#1B2A2A" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+// Flat coral monoline fox for dark surfaces (Ask Nibbl card, etc.)
+function FoxFlat({ size = 32 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" style={{ display: "block" }}>
+      <path d="M30 44 L21 12 L54 30 Z" fill="#E85F30" /><path d="M90 44 L99 12 L66 30 Z" fill="#E85F30" />
+      <path d="M25 41 C25 30 39 26 60 26 C81 26 95 30 95 41 C95 60 87 76 60 96 C33 76 25 60 25 41 Z" fill="#FF7A4D" />
+      <circle cx="45" cy="49" r="4" fill="#1B2A2A" /><circle cx="75" cy="49" r="4" fill="#1B2A2A" />
+      <path d="M60 70 L54 64 Q60 62 66 64 Z" fill="#1B2A2A" />
+    </svg>
+  );
+}
 function NibblMark({ size = 40, radius = 11 }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", display: "grid", placeItems: "center", background: "linear-gradient(145deg, " + C.accent + ", " + C.accentDark + ")" }}>
-      <svg width={size * 0.66} height={size * 0.66} viewBox="0 0 64 64" fill="none">
-        <path d="M12 16 L22 30 L8 30 Z" fill="#fff" /><path d="M52 16 L42 30 L56 30 Z" fill="#fff" />
-        <path d="M32 18 C46 18 50 30 50 38 C50 50 42 56 32 56 C22 56 14 50 14 38 C14 30 18 18 32 18 Z" fill="#fff" />
-        <path d="M14 38 C14 30 18 18 32 18 L32 44 Z" fill="#FFE7DC" opacity="0.55" />
-        <circle cx="25" cy="36" r="3" fill={C.accentDark} /><circle cx="39" cy="36" r="3" fill={C.accentDark} />
-        <path d="M32 42 L28 48 L36 48 Z" fill={C.accentDark} /><circle cx="32" cy="47" r="2.2" fill={C.ink} />
-      </svg>
+    <div style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", display: "grid", placeItems: "center", position: "relative", background: "linear-gradient(150deg,#FF8A5B 0%,#FF7A4D 38%,#E85F30 100%)", boxShadow: "inset 0 1px 2px rgba(255,255,255,.4)" }}>
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(120% 80% at 30% 12%,rgba(255,255,255,.35),transparent 55%)" }} />
+      <div style={{ position: "relative" }}><FoxFace size={size * 0.72} /></div>
     </div>
   );
 }
@@ -114,13 +136,14 @@ export default function Nibbl() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 22px", position: "relative", background: "linear-gradient(165deg,#FF8A5B 0%,#FF7A4D 42%,#E85F30 100%)", fontFamily: BODY }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(100% 60% at 50% 8%,rgba(255,255,255,.28),transparent 55%)", pointerEvents: "none" }} />
           <button onClick={() => setSheet("lang")} style={{ position: "relative", alignSelf: rtl ? "flex-start" : "flex-end", marginTop: 16, fontSize: 15, fontWeight: 600, color: "#fff", border: "1px solid rgba(255,255,255,.35)", background: "rgba(255,255,255,.12)", borderRadius: 99, padding: "6px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>{LANGS.find((l) => l.code === lang).flag} {lang} {"\u25BE"}</button>
-          <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ background: "rgba(255,255,255,.16)", borderRadius: 20, padding: 8 }}><NibblMark size={56} radius={16} /></div><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 40, color: "#fff", letterSpacing: -1 }}>Nibbl</span></div>
-            <MiniHomePreview target={2500} t={t} />
-            <h1 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, lineHeight: 1.2, textAlign: "center", color: "#fff", margin: 0, maxWidth: 280 }}>{t.tagline}</h1>
+          <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+            <div style={{ width: 160, height: 160, borderRadius: 46, background: "rgba(255,255,255,.16)", backdropFilter: "blur(4px)", boxShadow: "inset 0 2px 10px rgba(255,255,255,.25),0 20px 40px -12px rgba(120,30,0,.4)", display: "flex", alignItems: "center", justifyContent: "center", animation: "nibblFloat 4s ease-in-out infinite" }}><FoxFace size={118} /></div>
+            <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 46, color: "#fff", letterSpacing: "-.02em", marginTop: 36 }}>Nibbl<span style={{ opacity: .7 }}>.</span></div>
+            <div style={{ fontWeight: 600, fontSize: 19, color: "rgba(255,255,255,.92)", marginTop: 10, textAlign: "center", lineHeight: 1.4 }}>{t.tagline}</div>
+            <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.72)", marginTop: 14, textAlign: "center", lineHeight: 1.55, maxWidth: 260 }}>Effortless calorie &amp; macro tracking. Just point your camera at the plate.</div>
           </div>
-          <button onClick={() => setScreen("onboarding")} style={{ position: "relative", background: "#fff", color: C.accentDark, border: "none", borderRadius: 20, padding: "19px", fontSize: 18, fontWeight: 700, fontFamily: DISP, boxShadow: "0 14px 28px -8px rgba(120,30,0,.4)", cursor: "pointer", marginBottom: 14 }}>{t.getStarted}</button>
-          <div style={{ position: "relative", textAlign: "center", fontSize: 15, color: "rgba(255,255,255,.9)", fontWeight: 600, marginBottom: 24 }}>{t.haveAccount} <span style={{ color: "#fff", textDecoration: "underline" }}>{t.signIn}</span></div>
+          <button onClick={() => setScreen("onboarding")} style={{ position: "relative", background: "#fff", color: C.accentDark, border: "none", borderRadius: 18, padding: "18px", fontSize: 17, fontWeight: 700, fontFamily: DISP, boxShadow: "0 14px 28px -8px rgba(120,30,0,.4)", cursor: "pointer", marginBottom: 14 }}>{t.getStarted}</button>
+          <div style={{ position: "relative", textAlign: "center", fontSize: 14, color: "rgba(255,255,255,.9)", fontWeight: 600, marginBottom: 24 }}>{t.haveAccount} <span style={{ color: "#fff", textDecoration: "underline" }}>{t.signIn}</span></div>
         </div>
       )}
         {sheet === "lang" && <LangSheet onClose={() => setSheet(null)} lang={lang} setLang={(l) => { setLang(l); setSheet(null); }} title={t.language} />}
@@ -151,15 +174,13 @@ export default function Nibbl() {
 
   return (
     <Phone>{wrap(
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.grayBg, position: "relative", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
           {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} />}
           {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} />}
           {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} />}
         </div>
-        <TabBar tab={tab} setTab={setTab} t={t} />
-
-        {tab === "home" && <button onClick={() => setScanner(true)} style={{ position: "absolute", insetInlineEnd: 18, bottom: 78, width: 58, height: 58, borderRadius: 99, background: C.accent, border: "none", color: "#fff", display: "grid", placeItems: "center", boxShadow: "0 6px 18px rgba(255,122,77,.45)", cursor: "pointer" }}><Plus size={28} /></button>}
+        <TabBar tab={tab} setTab={setTab} t={t} onScan={() => setScanner(true)} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} />
 
         {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
         {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} />}
@@ -212,25 +233,27 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
   const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), img: analyzer.img }); if (ok) onClose(); };
 
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#0A0A0A", zIndex: 40, display: "flex", flexDirection: "column" }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#3a3a3a,#1a1a1a 60%,#0a0a0a)" }} />
+    <div style={{ position: "absolute", inset: 0, background: "#15110e", zIndex: 40, display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(120% 80% at 50% 38%,#3a2c22,#15110e 75%)" }} />
       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", zIndex: 2 }}>
-        <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 99, background: "rgba(255,255,255,.15)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><X size={20} color="#fff" /></button>
-        <button style={{ width: 36, height: 36, borderRadius: 99, background: "rgba(255,255,255,.15)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Zap size={18} color="#fff" /></button>
+        <button onClick={onClose} style={{ width: 40, height: 40, borderRadius: 14, background: "rgba(255,255,255,.14)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><X size={20} color="#fff" /></button>
+        <span style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>Scan your meal</span>
+        <button style={{ width: 40, height: 40, borderRadius: 14, background: "rgba(255,123,77,.9)", border: "none", display: "grid", placeItems: "center", cursor: "pointer", boxShadow: "0 6px 14px -4px rgba(232,95,48,.7)" }}><Zap size={18} color="#fff" /></button>
       </div>
       <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
         {!analyzer && (
           <React.Fragment>
-            <div style={{ position: "relative", width: 250, height: 250 }}>
-              <div style={{ position: "absolute", left: 0, top: 0, width: 44, height: 44, borderTop: "4px solid #fff", borderLeft: "4px solid #fff", borderTopLeftRadius: 10 }} />
-              <div style={{ position: "absolute", right: 0, top: 0, width: 44, height: 44, borderTop: "4px solid #fff", borderRight: "4px solid #fff", borderTopRightRadius: 10 }} />
-              <div style={{ position: "absolute", left: 0, bottom: 0, width: 44, height: 44, borderBottom: "4px solid #fff", borderLeft: "4px solid #fff", borderBottomLeftRadius: 10 }} />
-              <div style={{ position: "absolute", right: 0, bottom: 0, width: 44, height: 44, borderBottom: "4px solid #fff", borderRight: "4px solid #fff", borderBottomRightRadius: 10 }} />
+            <div style={{ position: "relative", width: 260, height: 260 }}>
+              <div style={{ position: "absolute", left: 0, top: 0, width: 42, height: 42, borderTop: "4px solid #FF7A4D", borderLeft: "4px solid #FF7A4D", borderTopLeftRadius: 16 }} />
+              <div style={{ position: "absolute", right: 0, top: 0, width: 42, height: 42, borderTop: "4px solid #FF7A4D", borderRight: "4px solid #FF7A4D", borderTopRightRadius: 16 }} />
+              <div style={{ position: "absolute", left: 0, bottom: 0, width: 42, height: 42, borderBottom: "4px solid #FF7A4D", borderLeft: "4px solid #FF7A4D", borderBottomLeftRadius: 16 }} />
+              <div style={{ position: "absolute", right: 0, bottom: 0, width: 42, height: 42, borderBottom: "4px solid #FF7A4D", borderRight: "4px solid #FF7A4D", borderBottomRightRadius: 16 }} />
+              <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><div style={{ width: 150, height: 150, borderRadius: "50%", background: "radial-gradient(circle at 40% 35%,rgba(255,255,255,.1),rgba(255,255,255,.03))", border: "1px dashed rgba(255,255,255,.25)" }} /></div>
               {mode === "barcode" && <div style={{ position: "absolute", top: "50%", left: 12, right: 12, height: 2, background: C.accent, boxShadow: "0 0 12px " + C.accent }} />}
             </div>
             <div style={{ color: "#fff", fontWeight: 800, fontSize: 22, marginTop: 26, fontFamily: DISP }}>{titles[mode]}</div>
             <div style={{ color: "rgba(255,255,255,.7)", fontSize: 14, marginTop: 6 }}>{subs[mode]}</div>
-            <button onClick={() => fileRef.current && fileRef.current.click()} style={{ marginTop: 26, width: 74, height: 74, borderRadius: 99, background: "#fff", border: "5px solid rgba(255,255,255,.4)", cursor: "pointer" }} />
+            <button onClick={() => fileRef.current && fileRef.current.click()} style={{ marginTop: 24, width: 74, height: 74, borderRadius: 99, background: "rgba(255,255,255,.25)", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><div style={{ width: 60, height: 60, borderRadius: 99, background: "#fff", border: "3px solid #15110e", boxShadow: "0 0 0 3px #fff" }} /></button>
           </React.Fragment>
         )}
         {analyzer && (
@@ -258,11 +281,9 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
         )}
       </div>
       {!analyzer && (
-        <div style={{ position: "relative", zIndex: 2, display: "flex", gap: 8, padding: "14px 16px 30px", justifyContent: "center" }}>
-          {SCAN_MODES.map((m) => { const sel = mode === m.key; const Icon = m.icon; return (
-            <button key={m.key} onClick={() => setMode(m.key)} style={{ flex: 1, maxWidth: 90, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "10px 6px", borderRadius: 14, border: sel ? "1.5px solid #fff" : "1.5px solid transparent", background: sel ? "rgba(255,255,255,.12)" : "transparent", cursor: "pointer" }}>
-              <Icon size={20} color="#fff" /><span style={{ color: "#fff", fontSize: 12, fontWeight: sel ? 700 : 500 }}>{t[m.labelKey]}</span>
-            </button>
+        <div style={{ position: "relative", zIndex: 2, display: "flex", gap: 6, padding: "14px 16px 30px", justifyContent: "center" }}>
+          {SCAN_MODES.map((m) => { const sel = mode === m.key; return (
+            <button key={m.key} onClick={() => setMode(m.key)} style={{ border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, padding: "8px 15px", borderRadius: 12, color: sel ? C.ink : "rgba(255,255,255,.65)", background: sel ? C.accent : "rgba(255,255,255,.08)" }}>{t[m.labelKey]}</button>
           ); })}
         </div>
       )}
@@ -314,23 +335,29 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
   const over = calLeft < 0;
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date();
-  const dateNums = days.map((_, i) => today.getDate() - today.getDay() + 1 + i);
   const todayIdx = (today.getDay() + 6) % 7;
+  const monday = new Date(today); monday.setDate(today.getDate() - todayIdx);
+  const dateNums = days.map((_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d.getDate(); });
+  const selIdx = Math.max(0, Math.min(6, todayIdx + dayOffset));
+  const hr = today.getHours();
+  const greeting = hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
   const dayLabel = dayOffset === 0 ? t.today : dayOffset === -1 ? t.yesterday : Math.abs(dayOffset) + "d";
 
   return (
     <div style={{ padding: "18px 16px 90px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><NibblMark size={38} /><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 20, color: C.ink }}>Nibbl</span>{pro && <span style={{ background: C.ink, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>PRO</span>}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", borderRadius: 99, padding: "6px 12px", boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><Flame size={16} color={C.flame} fill={C.flame} /><span style={{ fontWeight: 700, color: C.ink }}>{log.length}</span></div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div>
+          <div style={{ fontWeight: 500, fontSize: 13, color: C.ink, opacity: .5 }}>{greeting}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.ink }}>{dayLabel === t.today ? "Hey there" : dayLabel}</span>{pro && <span style={{ background: C.ink, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>PRO</span>}</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid " + C.border, borderRadius: 999, padding: "7px 12px", boxShadow: "0 4px 12px -6px rgba(27,42,42,.15)" }}><Flame size={16} color={C.accent} fill={C.accent} /><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{log.length}</span></div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <button onClick={() => setDayOffset(dayOffset - 1)} style={{ border: "none", background: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><ChevronLeft size={18} color={C.ink} /></button>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: C.ink }}><Calendar size={16} color={C.accent} /> {dayLabel}</div>
-        <button onClick={() => dayOffset < 0 && setDayOffset(dayOffset + 1)} disabled={dayOffset === 0} style={{ border: "none", background: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: dayOffset === 0 ? "default" : "pointer", opacity: dayOffset === 0 ? 0.4 : 1, boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}><ChevronRight size={18} color={C.ink} /></button>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
-        {days.map((d, i) => (<div key={i} style={{ textAlign: "center" }}><div style={{ width: 38, height: 38, borderRadius: 99, border: "1.5px " + (i === todayIdx ? "solid" : "dashed") + " " + (i === todayIdx ? C.ink : "#CDD2D8"), display: "grid", placeItems: "center", fontWeight: 700, color: C.ink, fontSize: 14 }}>{d}</div><div style={{ fontSize: 13, color: C.sub, marginTop: 4, fontWeight: i === todayIdx ? 700 : 400 }}>{dateNums[i]}</div></div>))}
+      <div style={{ display: "flex", gap: 7, marginBottom: 20 }}>
+        {days.map((d, i) => { const active = i === selIdx; const future = i > todayIdx; return (
+          <button key={i} disabled={future} onClick={() => setDayOffset(i - todayIdx)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "9px 0", borderRadius: 14, border: "none", cursor: future ? "default" : "pointer", opacity: future ? .4 : 1, background: active ? "linear-gradient(150deg,#FF7A4D,#E85F30)" : "transparent", boxShadow: active ? "0 8px 16px -6px rgba(232,95,48,.5)" : "none" }}>
+            <span style={{ fontWeight: 600, fontSize: 11, color: active ? "rgba(255,255,255,.85)" : C.ink, opacity: active ? 1 : .45 }}>{d}</span>
+            <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: active ? "#fff" : C.ink, opacity: active ? 1 : .55 }}>{dateNums[i]}</span>
+          </button>); })}
       </div>
       <Card style={{ padding: 20, display: "flex", alignItems: "center", gap: 18, marginBottom: 14 }}>
         <GradientRing pct={Math.min(consumed.cal / target, 1)} value={Math.abs(calLeft)} label={over ? t.caloriesOver : t.caloriesLeft} over={over} />
@@ -340,26 +367,31 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
           <MacroBar label={t.fat} have={consumed.f} goal={macroTargets.fat} color={C.fat} track="#E8F3FD" />
         </div>
       </Card>
-      <Card style={{ padding: 16, marginBottom: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 8 }}><GlassWater size={18} color={C.water} /><span style={{ fontWeight: 700, color: C.ink }}>{t.water}</span></div><span style={{ color: C.sub, fontSize: 14 }}>{water}/{waterGoal} {t.glasses}</span></div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>{Array.from({ length: waterGoal }).map((_, i) => (<button key={i} onClick={() => setWater(i + 1 === water ? i : i + 1)} style={{ flex: 1, height: 30, border: "none", borderRadius: 8, cursor: "pointer", background: i < water ? C.water : "#E9EDF2" }} />))}<button onClick={() => setWater(water + 1)} style={{ border: "none", background: C.water, color: "#fff", width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", cursor: "pointer" }}><Plus size={16} /></button></div>
-      </Card>
-      <button onClick={onCoach} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#2A2A3A,#1B2A2A)", borderRadius: 18, padding: 16, marginBottom: 18, display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,.12)", display: "grid", placeItems: "center" }}><Sparkles size={20} color={C.accent} /></div>
-        <div style={{ flex: 1 }}><div style={{ color: "#fff", fontWeight: 700 }}>{t.askCoach} {!pro && <Lock size={12} style={{ verticalAlign: "middle" }} />}</div><div style={{ color: "rgba(255,255,255,.65)", fontSize: 13 }}>{t.coachSub}</div></div>
-      </button>
-      <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.ink, marginBottom: 10 }}>{dayOffset === 0 ? t.todaysLog : t.log}</div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+        <Card style={{ flex: 1.1, padding: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontWeight: 600, fontSize: 13, color: C.ink }}>{t.water}</span><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 13, color: C.water }}>{water}<span style={{ opacity: .6, fontSize: 11 }}>/{waterGoal}</span></span></div>
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>{Array.from({ length: waterGoal }).map((_, i) => (<button key={i} onClick={() => setWater(i + 1 === water ? i : i + 1)} style={{ flex: 1, height: 34, border: "none", borderRadius: 8, cursor: "pointer", background: i < water ? C.water : C.fTrack }} />))}<button onClick={() => setWater(water + 1)} style={{ border: "none", background: C.water, color: "#fff", width: 26, height: 34, borderRadius: 8, display: "grid", placeItems: "center", cursor: "pointer", flex: "none" }}><Plus size={14} /></button></div>
+        </Card>
+        <button onClick={onCoach} style={{ flex: .9, textAlign: "left", border: "none", cursor: "pointer", background: "linear-gradient(150deg,#1B2A2A,#26403d)", borderRadius: 22, padding: 16, color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 14px 28px -16px rgba(27,42,42,.5)" }}>
+          <FoxFlat size={32} />
+          <div><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14 }}>Ask Nibbl {!pro && <Lock size={11} style={{ verticalAlign: "middle" }} />}</div><div style={{ fontWeight: 500, fontSize: 11, color: "rgba(255,255,255,.7)", marginTop: 2 }}>{t.askCoach}</div></div>
+        </button>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.ink }}>{dayOffset === 0 ? t.todaysLog : t.log}</span><span style={{ fontWeight: 600, fontSize: 13, color: C.accent }}>See all</span></div>
       {!pro && dayOffset === 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF1E9", border: "1px solid " + C.accent + "33", borderRadius: 16, padding: "12px 14px", marginBottom: 10 }}><span style={{ fontSize: 13, color: C.ink }}>{Math.max(3 - log.length, 0)} free scans left</span><button onClick={onUpsell} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 99, padding: "6px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Pro</button></div>}
       {log.length === 0 && <Card style={{ padding: 24, textAlign: "center", color: C.sub }}>{t.noMeals}</Card>}
       {log.map((m) => (
-        <Card key={m.id} style={{ padding: 12, display: "flex", gap: 12, marginBottom: 10, alignItems: "center" }}>
-          {m.img ? <img src={m.img} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover" }} /> : <div style={{ width: 64, height: 64, borderRadius: 12, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 30 }}>{foodEmoji(m.name)}</div>}
+        <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 13, background: "#fff", borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)" }}>
+          {m.img ? <img src={m.img} alt="" style={{ width: 50, height: 50, borderRadius: 14, objectFit: "cover", flex: "none" }} /> : <div style={{ width: 50, height: 50, borderRadius: 14, background: "linear-gradient(135deg,#FFE8D6,#FFD3B0)", display: "grid", placeItems: "center", fontSize: 26, flex: "none" }}>{foodEmoji(m.name)}</div>}
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontWeight: 700, color: C.ink }}>{m.name}</span><button onClick={() => onEdit(m)} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.sub, display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}><Pencil size={13} /> {m.time}</button></div>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, margin: "4px 0", color: C.ink }}><Flame size={14} color={C.flame} fill={C.flame} /> {m.calories} cal</div>
-            <div style={{ display: "flex", gap: 12, fontSize: 13, color: C.sub }}><span><b style={{ color: C.protein }}>{"\u25CF"}</b> {m.protein}g</span><span><b style={{ color: C.carbs }}>{"\u25CF"}</b> {m.carbs}g</span><span><b style={{ color: C.fat }}>{"\u25CF"}</b> {m.fat}g</span></div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>{m.name}</div>
+            <div style={{ display: "flex", gap: 7, alignItems: "center", marginTop: 5 }}>
+              <span style={{ width: 7, height: 7, borderRadius: 9, background: C.protein }} /><span style={{ width: 7, height: 7, borderRadius: 9, background: C.carbs }} /><span style={{ width: 7, height: 7, borderRadius: 9, background: C.fat }} />
+              <button onClick={() => onEdit(m)} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.ink, opacity: .45, fontSize: 11, display: "flex", alignItems: "center", gap: 4, padding: 0 }}><Pencil size={11} /> {m.time}</button>
+            </div>
           </div>
-        </Card>
+          <div style={{ textAlign: "right" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 16, color: C.ink }}>{m.calories}</div></div>
+        </div>
       ))}
     </div>
   );
@@ -433,20 +465,38 @@ function ReferralSheet({ onClose }) {
 
 function Paywall({ onSubscribe, onClose }) {
   const [plan, setPlan] = useState("yearly");
-  const plans = { yearly: { price: "$29.99", per: "/year", note: "$2.50/mo - Save 75%" }, monthly: { price: "$9.99", per: "/month", note: "Billed monthly" } };
-  const features = ["Unlimited AI photo scans", "Barcode, label & fridge scan", "AI nutrition coach", "Home & Lock Screen widgets", "Editable goals & history"];
+  const features = ["Unlimited AI food scans", "Barcode, label & fridge modes", "AI Coach & advanced insights", "Home & Lock Screen widgets", "Editable goals & history"];
   return (
-    <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, padding: "20px 22px", overflowY: "auto" }}>
-      <button onClick={onClose} style={{ alignSelf: "flex-end", border: "none", background: "transparent", color: C.sub, fontSize: 22, cursor: "pointer" }}>{"\u2715"}</button>
-      <div style={{ textAlign: "center", marginTop: 4 }}><NibblMark size={62} radius={18} /></div>
-      <h1 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, textAlign: "center", margin: "16px 0 4px" }}>Nibbl Pro</h1>
-      <p style={{ textAlign: "center", color: C.sub, margin: "0 0 22px" }}>Track everything. Hit your goal faster.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>{features.map((f) => (<div key={f} style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 24, height: 24, borderRadius: 99, background: C.accent, display: "grid", placeItems: "center" }}><Check size={15} color="#fff" /></div><span style={{ color: C.ink, fontWeight: 500 }}>{f}</span></div>))}</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{["yearly", "monthly"].map((k) => { const sel = plan === k; return (<button key={k} onClick={() => setPlan(k)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderRadius: 18, border: "2px solid " + (sel ? C.accent : "#EFE6D8"), background: sel ? "#fff" : "transparent", cursor: "pointer", position: "relative" }}><div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, color: C.ink, fontSize: 17, textTransform: "capitalize" }}>{k}</div><div style={{ fontSize: 13, color: C.sub }}>{plans[k].note}</div></div><div style={{ fontWeight: 800, color: C.ink, fontSize: 20 }}>{plans[k].price}<span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>{plans[k].per}</span></div>{k === "yearly" && <div style={{ position: "absolute", top: -10, right: 16, background: C.accent, color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>BEST VALUE</div>}</button>); })}</div>
-      <button onClick={onSubscribe} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 30, padding: "20px", fontSize: 19, fontWeight: 700, fontFamily: DISP, boxShadow: "0 8px 0 " + C.accentDark, cursor: "pointer", marginBottom: 10 }}>{"Start " + (plan === "yearly" ? "Yearly" : "Monthly")}</button>
-      <div style={{ textAlign: "center", fontSize: 12, color: C.sub, marginBottom: 6 }}>Cancel anytime - Restore - Terms - Privacy</div>
-      <div style={{ textAlign: "center", fontSize: 11, color: C.sub, marginBottom: 14 }}>Nibbl does not provide medical advice and is not a substitute for a physician.</div>
-    </div></Phone>
+    <Phone>
+      <div style={{ flex: 1, position: "relative", background: C.cream, fontFamily: BODY, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        <div style={{ position: "relative", height: 262, background: "linear-gradient(160deg,#FF8A5B,#E85F30)", flex: "none", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(90% 60% at 50% 0%,rgba(255,255,255,.25),transparent 60%)" }} />
+          <button onClick={onClose} style={{ position: "absolute", top: 22, right: 22, width: 34, height: 34, borderRadius: 12, background: "rgba(255,255,255,.2)", border: "none", display: "grid", placeItems: "center", cursor: "pointer", zIndex: 2 }}><X size={18} color="#fff" /></button>
+          <div style={{ position: "absolute", top: 40, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ width: 84, height: 84, borderRadius: 26, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", justifyContent: "center", animation: "nibblFloat 4s ease-in-out infinite" }}><FoxFace size={60} /></div>
+            <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: "#fff", letterSpacing: ".18em", marginTop: 16, opacity: .85 }}>NIBBL PRO</div>
+            <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 25, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.2 }}>Track smarter,<br />effortlessly</div>
+          </div>
+        </div>
+        <div style={{ flex: 1, padding: "22px 22px 24px", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 18 }}>
+            {features.map((f) => (<div key={f} style={{ display: "flex", alignItems: "center", gap: 11 }}><div style={{ width: 24, height: 24, borderRadius: 8, background: "#FFEDE4", display: "grid", placeItems: "center", flex: "none" }}><Check size={13} color={C.accentDark} strokeWidth={3.4} /></div><span style={{ fontWeight: 500, fontSize: 14, color: C.ink }}>{f}</span></div>))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button onClick={() => setPlan("monthly")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1.5px solid " + (plan === "monthly" ? C.accentDark : "#F0EADF"), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}><div><div style={{ fontWeight: 600, fontSize: 15, color: C.ink }}>Monthly</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Billed every month</div></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>$9.99</div></button>
+            <button onClick={() => setPlan("yearly")} style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "2px solid " + (plan === "yearly" ? C.accentDark : "#F0EADF"), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left", boxShadow: plan === "yearly" ? "0 12px 24px -12px rgba(232,95,48,.4)" : "none" }}>
+              <div style={{ position: "absolute", top: -11, left: 16, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", color: "#fff", fontFamily: DISP, fontWeight: 700, fontSize: 10, letterSpacing: ".04em", padding: "4px 10px", borderRadius: 99 }}>BEST VALUE {"\u00b7"} SAVE 75%</div>
+              <div><div style={{ fontWeight: 600, fontSize: 15, color: C.ink }}>Yearly</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>$2.50 / month</div></div>
+              <div style={{ textAlign: "right" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.accentDark }}>$29.99</div></div>
+            </button>
+          </div>
+          <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 12, paddingTop: 18 }}>
+            <button onClick={onSubscribe} style={{ height: 58, borderRadius: 18, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", boxShadow: "0 14px 28px -8px rgba(232,95,48,.5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: DISP, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer" }}>Start 7-day free trial</button>
+            <div style={{ textAlign: "center", fontWeight: 500, fontSize: 12, color: C.ink, opacity: .45 }}>Cancel anytime {"\u00b7"} Restore purchase</div>
+          </div>
+        </div>
+      </div>
+    </Phone>
   );
 }
 
@@ -467,17 +517,48 @@ const Bar = ({ c }) => <div style={{ flex: 1, height: 6, borderRadius: 9, backgr
 
 function ProgressTab({ weights, setWeights, totalCal, log, t }) {
   const last = weights[weights.length - 1] ? weights[weights.length - 1].kg : 0;
+  const first = weights[0] ? weights[0].kg : last;
+  const delta = +(last - first).toFixed(1);
+  const down = delta <= 0;
   const min = Math.min.apply(null, weights.map((w) => w.kg)); const max = Math.max.apply(null, weights.map((w) => w.kg)); const range = max - min || 1;
   const logWeight = () => { const v = prompt("Log weight (kg)"); const n = parseFloat(v); if (!isNaN(n)) { const d = new Date(); setWeights((w) => [...w, { date: (d.getMonth() + 1) + "/" + d.getDate(), kg: n }]); } };
+  const days = Math.min(log.length, 30);
+  const dlc = 2 * Math.PI * 30;
+  const pts = weights.map((w, i) => ({ x: +((i / (weights.length - 1 || 1)) * 300).toFixed(1), y: +(100 - ((w.kg - min) / range) * 80).toFixed(1) }));
+  const line = pts.map((p, i) => (i ? "L" : "M") + p.x + " " + p.y).join(" ");
+  const area = line + " L300 120 L0 120 Z";
+  const end = pts[pts.length - 1] || { x: 300, y: 60 };
   return (
-    <div style={{ padding: "18px 16px 90px" }}>
-      <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink, marginBottom: 16 }}>{t.progress}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-        <Card style={{ padding: 18, textAlign: "center" }}><Ring pct={0.7} size={70}><Scale size={22} color={C.ink} /></Ring><div style={{ color: C.sub, fontSize: 14, marginTop: 10 }}>Last weight</div><div style={{ fontWeight: 800, fontSize: 22, color: C.ink }}>{last} kg</div><button onClick={logWeight} style={{ marginTop: 10, background: C.ink, color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, cursor: "pointer" }}>Log Weight</button></Card>
-        <Card style={{ padding: 18, textAlign: "center" }}><Ring pct={log.length / 7} size={70}><NibblMark size={28} radius={9} /></Ring><div style={{ color: C.sub, fontSize: 14, marginTop: 10 }}>Days logged</div><div style={{ fontWeight: 800, fontSize: 22, color: C.ink }}>{Math.min(log.length, 7)}/7</div></Card>
+    <div style={{ padding: "18px 22px 110px" }}>
+      <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: C.ink, marginBottom: 4 }}>{t.progress}</div>
+      <div style={{ fontWeight: 500, fontSize: 13, color: C.ink, opacity: .5, marginBottom: 20 }}>Last 30 days</div>
+
+      <Card style={{ padding: 20, borderRadius: 26, marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Current weight</div><div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 34, color: C.ink, letterSpacing: "-.02em" }}>{last}</span><span style={{ fontFamily: DISP, fontWeight: 600, fontSize: 14, color: C.ink, opacity: .5 }}>kg</span></div></div>
+          <button onClick={logWeight} title="Log weight" style={{ display: "flex", alignItems: "center", gap: 5, background: down ? "#E9F6EC" : "#FFEDE4", padding: "6px 11px", borderRadius: 99, border: "none", cursor: "pointer" }}>{down ? <TrendingDown size={13} color="#3E9B57" /> : <TrendingUp size={13} color={C.accentDark} />}<span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: down ? "#3E9B57" : C.accentDark }}>{Math.abs(delta)} kg</span></button>
+        </div>
+        <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
+          <defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FF7A4D" stopOpacity=".28" /><stop offset="1" stopColor="#FF7A4D" stopOpacity="0" /></linearGradient></defs>
+          <path d={area} fill="url(#wfill)" />
+          <path d={line} fill="none" stroke="#E85F30" strokeWidth="3.5" strokeLinecap="round" />
+          <circle cx={end.x} cy={end.y} r="5" fill="#E85F30" stroke="#fff" strokeWidth="2.5" />
+        </svg>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontWeight: 500, fontSize: 11, color: C.ink, opacity: .4 }}><span>{weights[0] && weights[0].date}</span><span>{weights[weights.length - 1] && weights[weights.length - 1].date}</span></div>
+      </Card>
+
+      <Card style={{ padding: 18, borderRadius: 24, marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ position: "relative", width: 74, height: 74, flex: "none" }}>
+          <svg width="74" height="74" viewBox="0 0 74 74"><circle cx="37" cy="37" r="30" fill="none" stroke={C.ringTrack} strokeWidth="8" /><circle cx="37" cy="37" r="30" fill="none" stroke="url(#dlc)" strokeWidth="8" strokeLinecap="round" strokeDasharray={dlc} strokeDashoffset={dlc * (1 - days / 30)} transform="rotate(-90 37 37)" /><defs><linearGradient id="dlc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#FF8A5B" /><stop offset="1" stopColor="#E85F30" /></linearGradient></defs></svg>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 19, color: C.ink }}>{days}</span></div>
+        </div>
+        <div><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>Days logged</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 2 }}>of 30 days</div></div>
+      </Card>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{totalCal.toLocaleString()}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Avg daily kcal</div></Card>
+        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ display: "flex", alignItems: "center", gap: 6 }}><Flame size={18} color={C.accent} fill={C.accent} /><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{log.length}</div></div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Day streak</div></Card>
       </div>
-      <Card style={{ padding: 18, marginBottom: 14 }}><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.ink, marginBottom: 12 }}>Weight Progress</div><svg viewBox="0 0 300 150" style={{ width: "100%", height: 150 }}>{[0, 0.25, 0.5, 0.75, 1].map((g) => <line key={g} x1="0" x2="300" y1={150 * g} y2={150 * g} stroke="#EFEFEF" />)}<polyline fill="none" stroke={C.accent} strokeWidth="3" strokeLinecap="round" points={weights.map((w, i) => ((i / (weights.length - 1 || 1)) * 280 + 10) + "," + (140 - ((w.kg - min) / range) * 120)).join(" ")} />{weights.map((w, i) => <circle key={i} cx={(i / (weights.length - 1 || 1)) * 280 + 10} cy={140 - ((w.kg - min) / range) * 120} r="5" fill={C.accent} />)}</svg><div style={{ display: "flex", justifyContent: "space-between", color: C.sub, fontSize: 13, marginTop: 4 }}><span>{weights[0] && weights[0].date}</span><span>{weights[weights.length - 1] && weights[weights.length - 1].date}</span></div></Card>
-      <Card style={{ padding: 18 }}><div style={{ color: C.sub, fontSize: 15 }}>Total Calories</div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 32, color: C.ink }}>{totalCal}</div></Card>
     </div>
   );
 }
@@ -516,6 +597,9 @@ function Phone({ children }) {
     l.rel = "stylesheet";
     l.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap";
     document.head.appendChild(l);
+    const s = document.createElement("style");
+    s.textContent = "@keyframes nibblFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}";
+    document.head.appendChild(s);
   }, []);
   return (
     <div style={{ minHeight: "100vh", background: "#111", display: "grid", placeItems: "center", padding: 12, fontFamily: BODY }}>
@@ -581,11 +665,17 @@ function MacroBar({ label, have, goal, color, track }) {
     </div>
   );
 }
-function TabBar({ tab, setTab, t }) {
-  const items = [["home", Home, t.home], ["progress", BarChart3, t.progress], ["settings", Settings, t.settings]];
+function TabBar({ tab, setTab, t, onScan, onCoach }) {
+  const Item = ({ k, Icon, onClick }) => (
+    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "grid", placeItems: "center", padding: 4 }}><Icon size={24} color={tab === k ? C.accent : "#B7AE9E"} strokeWidth={2.2} /></button>
+  );
   return (
-    <div style={{ display: "flex", justifyContent: "space-around", padding: "12px 0 22px", background: "#fff", borderTop: "1px solid #F0EADF" }}>
-      {items.map((it) => { const Icon = it[1]; return (<button key={it[0]} onClick={() => setTab(it[0])} style={{ background: "none", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", color: tab === it[0] ? C.ink : C.sub }}><Icon size={22} /><span style={{ fontSize: 11, fontWeight: tab === it[0] ? 700 : 500 }}>{it[2]}</span></button>); })}
+    <div style={{ position: "absolute", bottom: 18, left: 18, right: 18, background: "#fff", border: "1px solid " + C.border, borderRadius: 26, boxShadow: "0 10px 30px -8px rgba(27,42,42,.22)", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
+      <Item k="home" Icon={Home} onClick={() => setTab("home")} />
+      <Item k="progress" Icon={BarChart3} onClick={() => setTab("progress")} />
+      <button onClick={onScan} style={{ width: 52, height: 52, borderRadius: 18, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", border: "none", boxShadow: "0 8px 16px -4px rgba(232,95,48,.55)", display: "grid", placeItems: "center", cursor: "pointer", marginTop: -22 }}><Camera size={24} color="#fff" strokeWidth={2.2} /></button>
+      <Item k="coach" Icon={Heart} onClick={onCoach} />
+      <Item k="settings" Icon={User} onClick={() => setTab("settings")} />
     </div>
   );
 }
