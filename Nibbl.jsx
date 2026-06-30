@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe, Heart, User, TrendingUp, TrendingDown, Bookmark, BookmarkCheck } from "lucide-react";
+import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe, Heart, User, TrendingUp, TrendingDown, Bookmark, BookmarkCheck, AlertTriangle, Sparkle } from "lucide-react";
 
 const C = {
   ink: "#1B2A2A", cream: "#FBF7F0", accent: "#FF7A4D", accentLight: "#FF8A5B", accentDark: "#E85F30",
@@ -76,6 +76,39 @@ function foodEmoji(name) {
   return "\u{1F37D}\uFE0F";
 }
 
+// Health score (1-10) from per-serving nutrition + a plain-language verdict.
+function scoreFood(m) {
+  const p = m.protein || 0, fb = m.fiber || 0, fat = m.fat || 0, cal = m.calories || 0;
+  const sg = m.sugar != null ? m.sugar : Math.round((m.carbs || 0) * 0.3);
+  const na = m.sodium || 0;
+  let s = 5;
+  s += Math.min(fb / 5, 2);
+  s += p >= 15 ? 1 : p >= 8 ? 0.5 : 0;
+  s -= Math.min(sg / 15, 2);
+  s -= Math.min(na / 600, 2);
+  if (fat > 25 && p < 10) s -= 1;
+  if (cal > 600) s -= 0.5;
+  s = Math.max(1, Math.min(10, Math.round(s)));
+  const note = s >= 8 ? "Excellent! Great food choices and well-balanced nutrition."
+    : s >= 6 ? "Good - a balanced, sensible choice."
+    : s >= 4 ? "Okay - keep an eye on the sugar, sodium or fat here."
+    : "Heavy - high in sugar, sodium or fat. Best enjoyed occasionally.";
+  return { score: s, note, sugar: sg };
+}
+function gradeInfo(score) {
+  const g = score >= 8 ? { letter: "A", label: "Great", color: "#3E9B57" }
+    : score >= 7 ? { letter: "B", label: "Good", color: "#5FB87A" }
+    : score >= 5 ? { letter: "C", label: "Fair", color: "#E0A92E" }
+    : score >= 3 ? { letter: "D", label: "Poor", color: "#E8803A" }
+    : { letter: "E", label: "Bad", color: "#E0504E" };
+  return { ...g, s100: score * 10 };
+}
+const flagColor = (val, hi) => (val >= hi ? "#E0504E" : "#3E9B57");
+const SCORE_RAMP = ["#E66A5A", "#E8803A", "#E8923A", "#E0A92E", "#E0B72E", "#C9C13A", "#9FC24E", "#7DBE5C", "#5FB87A", "#3E9B57"];
+function ScoreBar({ score }) {
+  return <div style={{ display: "flex", gap: 4 }}>{SCORE_RAMP.map((c, i) => (<div key={i} style={{ flex: 1, height: 7, borderRadius: 4, background: i < score ? c : "#E9E4DA" }} />))}</div>;
+}
+
 const FOOD_DB = [
   { name: "Grilled chicken breast", calories: 165, protein: 31, carbs: 0, fat: 4, fiber: 0, sodium: 74 },
   { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0, fiber: 3, sodium: 1 },
@@ -98,6 +131,10 @@ const FOOD_DB = [
   { name: "Panera Greek salad", calories: 380, protein: 9, carbs: 17, fat: 32, fiber: 5, sodium: 720, restaurant: "Panera" },
   { name: "Subway turkey 6\"", calories: 280, protein: 18, carbs: 40, fat: 4, fiber: 3, sodium: 760, restaurant: "Subway" },
   { name: "Shake Shack ShackBurger", calories: 530, protein: 27, carbs: 41, fat: 30, fiber: 2, sodium: 800, restaurant: "Shake Shack" },
+  // Packaged item with an ingredient label (demonstrates ingredient insights)
+  { name: "Hazelnut cocoa spread (2 tbsp)", calories: 270, protein: 2, carbs: 29, fat: 14, fiber: 1, sodium: 20, sugar: 28,
+    ingredients: ["Sugar", "Palm Oil", "Hazelnuts", "Skim milk", "Cocoa", "Lecithin", "Vanillin"],
+    concerns: [{ name: "Palm Oil", level: "moderate", note: "EFSA 2016: process contaminants formed during refining are genotoxic and carcinogenic." }, { name: "Added sugar", level: "high", note: "First ingredient by weight. High free-sugar intake is linked to weight gain and dental and metabolic issues." }] },
 ];
 
 export default function Nibbl() {
@@ -141,11 +178,11 @@ export default function Nibbl() {
   const removeMeal = (id) => setLog((l) => l.filter((x) => x.id !== id));
 
   const [savedMeals, setSavedMeals] = useState([
-    { name: "Grilled chicken bowl", calories: 520, protein: 42, carbs: 38, fat: 18, fiber: 7, sodium: 640 },
-    { name: "Greek yogurt + berries", calories: 220, protein: 18, carbs: 26, fat: 4, fiber: 5, sodium: 70 },
+    { name: "Grilled chicken bowl", calories: 520, protein: 42, carbs: 38, fat: 18, fiber: 7, sodium: 640, sugar: 6, ingredients: ["Chicken breast", "Brown rice", "Avocado", "Cherry tomato", "Olive oil"] },
+    { name: "Greek yogurt + berries", calories: 220, protein: 18, carbs: 26, fat: 4, fiber: 5, sodium: 70, sugar: 18, ingredients: ["Greek yogurt", "Blueberries", "Strawberries", "Honey"] },
   ]);
   const isSaved = (m) => savedMeals.some((s) => s.name === m.name);
-  const toggleSaved = (m) => setSavedMeals((l) => (l.some((s) => s.name === m.name) ? l.filter((s) => s.name !== m.name) : [{ name: m.name, calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber || 0, sodium: m.sodium || 0 }, ...l]));
+  const toggleSaved = (m) => setSavedMeals((l) => (l.some((s) => s.name === m.name) ? l.filter((s) => s.name !== m.name) : [{ name: m.name, calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber || 0, sodium: m.sodium || 0, sugar: m.sugar, ingredients: m.ingredients, concerns: m.concerns }, ...l]));
 
   const wrap = (children) => <div dir={rtl ? "rtl" : "ltr"} style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>;
 
@@ -195,7 +232,7 @@ export default function Nibbl() {
     <Phone>{wrap(
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} />}
+          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} />}
           {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} />}
           {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} />}
         </div>
@@ -209,6 +246,7 @@ export default function Nibbl() {
         {sheet === "goals" && <GoalsSheet onClose={() => setSheet(null)} current={{ calories: target, protein: macroTargets.protein, carbs: macroTargets.carbs, fat: macroTargets.fat, fiber: macroTargets.fiber, sodium: macroTargets.sodium }} onSave={(g) => { setGoals(g); setSheet(null); }} t={t} />}
         {sheet === "lang" && <LangSheet onClose={() => setSheet(null)} lang={lang} setLang={(l) => { setLang(l); setSheet(null); }} title={t.language} />}
         {sheet && sheet.edit && <EditSheet meal={sheet.edit} onClose={() => setSheet(null)} onSave={(m) => { updateMeal(sheet.edit.id, m); setSheet(null); }} onDelete={() => { removeMeal(sheet.edit.id); setSheet(null); }} />}
+        {sheet && sheet.insight && <InsightSheet meal={sheet.insight} onClose={() => setSheet(null)} />}
       </div>
     )}</Phone>
   );
@@ -235,7 +273,7 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
   };
   const analyze = async (b64, media, dataUrl, m) => {
     let p = 12; const tick = setInterval(() => { p = Math.min(p + 9, 92); setAnalyzer((a) => (a ? { ...a, pct: p } : a)); }, 350);
-    const SCHEMA = ' Respond ONLY raw JSON: {"name": string (max 4 words), "calories": number, "protein": number (g), "carbs": number (g), "fat": number (g), "fiber": number (g), "sodium": number (mg)}';
+    const SCHEMA = ' Respond ONLY raw JSON: {"name": string (max 4 words), "calories": number, "protein": number (g), "carbs": number (g), "fat": number (g), "fiber": number (g), "sugar": number (g), "sodium": number (mg), "ingredients": string[] (list if a label/package is visible, else []), "concerns": [{"name": string, "level": "low"|"moderate"|"high", "note": string (short health impact, cite evidence if known)}] (flag additives, refined oils or added sugars worth noting, else [])}';
     const prompts = {
       food: 'Identify this food and estimate nutrition.' + SCHEMA,
       barcode: 'This is a product barcode/package. Identify the product and per-serving nutrition.' + SCHEMA,
@@ -250,7 +288,7 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
       clearInterval(tick); setAnalyzer({ img: dataUrl, status: "done", result: r });
     } catch (e) { clearInterval(tick); setAnalyzer({ img: dataUrl, status: "error" }); }
   };
-  const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), fiber: Math.round(r.fiber || 0), sodium: Math.round(r.sodium || 0), img: analyzer.img }); if (ok) onClose(); };
+  const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), fiber: Math.round(r.fiber || 0), sodium: Math.round(r.sodium || 0), sugar: r.sugar != null ? Math.round(r.sugar) : undefined, ingredients: r.ingredients || [], concerns: r.concerns || [], img: analyzer.img }); if (ok) onClose(); };
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#15110e", zIndex: 40, display: "flex", flexDirection: "column" }}>
@@ -295,6 +333,16 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
                 )}
               </div>
             </div>
+            {analyzer.status === "done" && (() => { const hs = scoreFood(analyzer.result); const g = gradeInfo(hs.score); return (
+              <div style={{ marginTop: 12, background: "#F6FBF7", border: "1px solid #E3F0E6", borderRadius: 14, padding: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div><div style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>Health Score</div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: g.color, lineHeight: 1.1 }}>{hs.score}<span style={{ fontSize: 14, color: C.sub }}>/10</span></div></div>
+                  <div style={{ width: 38, height: 38, borderRadius: 99, border: "3px solid " + g.color, display: "grid", placeItems: "center", flex: "none" }}><Check size={18} color={g.color} strokeWidth={3} /></div>
+                </div>
+                <div style={{ margin: "9px 0 8px" }}><ScoreBar score={hs.score} /></div>
+                <div style={{ fontSize: 12, color: C.ink, opacity: .7, lineHeight: 1.4 }}>{hs.note}</div>
+              </div>
+            ); })()}
             {analyzer.status === "done" && <div style={{ display: "flex", gap: 10, marginTop: 14 }}><button onClick={confirm} style={{ flex: 1, background: C.accent, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Add to log</button><button onClick={() => setAnalyzer(null)} style={{ background: C.grayBg, color: C.ink, border: "none", borderRadius: 12, padding: "13px 16px", fontWeight: 600, cursor: "pointer" }}>Retry</button></div>}
             {analyzer.status === "error" && <button onClick={() => setAnalyzer(null)} style={{ width: "100%", marginTop: 14, background: C.ink, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Back</button>}
           </div>
@@ -353,7 +401,7 @@ function LangSheet({ onClose, lang, setLang, title }) {
   );
 }
 
-function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd }) {
+function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd, onInsight }) {
   const over = calLeft < 0;
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date();
@@ -435,19 +483,19 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.ink }}>{dayOffset === 0 ? t.todaysLog : t.log}</span><span style={{ fontWeight: 600, fontSize: 13, color: C.accent }}>See all</span></div>
       {!pro && dayOffset === 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF1E9", border: "1px solid " + C.accent + "33", borderRadius: 16, padding: "12px 14px", marginBottom: 10 }}><span style={{ fontSize: 13, color: C.ink }}>{Math.max(3 - log.length, 0)} free scans left</span><button onClick={onUpsell} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 99, padding: "6px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Pro</button></div>}
       {log.length === 0 && <Card style={{ padding: 24, textAlign: "center", color: C.sub }}>{t.noMeals}</Card>}
-      {log.map((m) => (
-        <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 13, background: "#fff", borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)" }}>
+      {log.map((m) => { const g = gradeInfo(scoreFood(m).score); return (
+        <div key={m.id} onClick={() => onInsight(m)} style={{ display: "flex", alignItems: "center", gap: 13, background: "#fff", borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)", cursor: "pointer" }}>
           {m.img ? <img src={m.img} alt="" style={{ width: 50, height: 50, borderRadius: 14, objectFit: "cover", flex: "none" }} /> : <div style={{ width: 50, height: 50, borderRadius: 14, background: "linear-gradient(135deg,#FFE8D6,#FFD3B0)", display: "grid", placeItems: "center", fontSize: 26, flex: "none" }}>{foodEmoji(m.name)}</div>}
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>{m.name}</div>
             <div style={{ display: "flex", gap: 7, alignItems: "center", marginTop: 5 }}>
               <span style={{ width: 7, height: 7, borderRadius: 9, background: C.protein }} /><span style={{ width: 7, height: 7, borderRadius: 9, background: C.carbs }} /><span style={{ width: 7, height: 7, borderRadius: 9, background: C.fat }} />
-              <button onClick={() => onEdit(m)} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.ink, opacity: .45, fontSize: 11, display: "flex", alignItems: "center", gap: 4, padding: 0 }}><Pencil size={11} /> {m.time}</button>
+              <button onClick={(e) => { e.stopPropagation(); onEdit(m); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.ink, opacity: .45, fontSize: 11, display: "flex", alignItems: "center", gap: 4, padding: 0 }}><Pencil size={11} /> {m.time}</button>
             </div>
           </div>
-          <div style={{ textAlign: "right" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 16, color: C.ink }}>{m.calories}</div></div>
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 16, color: C.ink }}>{m.calories}</div><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 11, color: g.color }}>{scoreFood(m).score}/10</span></div>
         </div>
-      ))}
+      ); })}
     </div>
   );
 }
@@ -537,6 +585,72 @@ function ReferralSheet({ onClose }) {
       <div style={{ textAlign: "center", padding: "8px 0 18px" }}><div style={{ display: "inline-grid", placeItems: "center", width: 64, height: 64, borderRadius: 20, background: "#FFF1E9", marginBottom: 12 }}><Gift size={30} color={C.accent} /></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 20, color: C.ink }}>Refer & get 1 month free</div><div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>Share your code. When a friend subscribes, you both get 1 month of Nibbl Pro free.</div></div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "2px dashed " + C.accent, borderRadius: 14, padding: "14px 18px", marginBottom: 14 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink, letterSpacing: 1 }}>NIBBL-FOX42</span><button onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontWeight: 700, cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button></div>
       <button onClick={onClose} style={{ width: "100%", background: C.ink, color: "#fff", border: "none", borderRadius: 14, padding: 14, fontWeight: 700, cursor: "pointer" }}>Share invite</button>
+    </Sheet>
+  );
+}
+
+function InsightSheet({ meal, onClose }) {
+  const hs = scoreFood(meal); const g = gradeInfo(hs.score); const sugar = hs.sugar;
+  const tot = (meal.protein || 0) * 4 + (meal.carbs || 0) * 4 + (meal.fat || 0) * 9 || 1;
+  const bar = { p: (meal.protein || 0) * 4 / tot * 100, c: (meal.carbs || 0) * 4 / tot * 100, f: (meal.fat || 0) * 9 / tot * 100 };
+  const concerns = meal.concerns || []; const ingredients = meal.ingredients || [];
+  const levelColor = { high: "#E0504E", moderate: "#E0A92E", low: "#5FB87A" };
+  const Chip = ({ val, unit, label, bg }) => (
+    <div style={{ flex: 1, background: bg, borderRadius: 14, padding: "10px 6px", textAlign: "center" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 15, color: C.ink }}>{val}{unit}</div><div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{label}</div></div>
+  );
+  return (
+    <Sheet onClose={onClose} title={meal.name}>
+      <Card style={{ padding: 16, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 32, color: C.ink, letterSpacing: "-.02em" }}>{meal.calories}</span><span style={{ fontSize: 14, color: C.sub, fontWeight: 600 }}>kcal</span></div>
+        <div style={{ display: "flex", height: 8, borderRadius: 9, overflow: "hidden", margin: "10px 0 12px", background: "#EEE" }}><div style={{ width: bar.p + "%", background: C.protein }} /><div style={{ width: bar.c + "%", background: C.carbs }} /><div style={{ width: bar.f + "%", background: C.fat }} /></div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+          {[[meal.protein || 0, "Protein", C.protein, "left"], [meal.carbs || 0, "Carbs", C.carbs, "center"], [meal.fat || 0, "Fat", C.fat, "right"]].map((r, i) => (
+            <div key={i} style={{ textAlign: r[3] }}><div style={{ fontWeight: 700, color: C.ink }}><b style={{ color: r[2], fontSize: 10 }}>{"●"}</b> {r[0]}g</div><div style={{ fontSize: 12, color: C.sub }}>{r[1]}</div></div>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Chip val={meal.fiber || 0} unit="g" label="Fiber" bg={C.fiberTrack} />
+          <Chip val={sugar} unit="g" label="Sugar" bg="#FBEAF0" />
+          <Chip val={meal.sodium || 0} unit="mg" label="Sodium" bg={C.sodiumTrack} />
+        </div>
+      </Card>
+
+      <Card style={{ padding: 16, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 99, border: "4px solid " + g.color, display: "grid", placeItems: "center", flex: "none" }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 22, color: g.color }}>{g.letter}</span></div>
+          <div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>{g.label}</div><div style={{ fontWeight: 700, fontSize: 14, color: g.color }}>{g.s100}/100</div></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-around", marginTop: 14, paddingTop: 14, borderTop: "1px solid #F0EADF" }}>
+          {[["Fat", flagColor(meal.fat || 0, 18)], ["Sugars", flagColor(sugar, 15)], ["Salt", flagColor(meal.sodium || 0, 600)]].map((r) => (
+            <div key={r[0]} style={{ textAlign: "center" }}><div style={{ width: 9, height: 9, borderRadius: 99, background: r[1], margin: "0 auto 6px" }} /><div style={{ fontSize: 12, color: C.sub }}>{r[0]}</div></div>
+          ))}
+        </div>
+      </Card>
+
+      {concerns.length > 0 && (
+        <Card style={{ padding: 14, marginBottom: 14, background: "#FFFBF2", border: "1px solid #F2E6C7" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 12, letterSpacing: ".04em", color: C.ink }}><AlertTriangle size={15} color="#E0A92E" /> CONCERNING INGREDIENTS</span>
+            <span style={{ background: "#F2E6C7", color: "#8a6d1f", fontWeight: 700, fontSize: 11, borderRadius: 99, width: 20, height: 20, display: "grid", placeItems: "center" }}>{concerns.length}</span>
+          </div>
+          {concerns.map((c, i) => (
+            <div key={i} style={{ paddingTop: i ? 10 : 0, marginTop: i ? 10 : 0, borderTop: i ? "1px solid #F2E6C7" : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: C.ink }}><span style={{ width: 8, height: 8, borderRadius: 99, background: levelColor[c.level] || C.sub }} /> {c.name}</span><span style={{ fontSize: 10, fontWeight: 700, color: levelColor[c.level], background: "#fff", border: "1px solid " + (levelColor[c.level] || C.sub) + "66", padding: "3px 8px", borderRadius: 99, textTransform: "uppercase" }}>{c.level}</span></div>
+              <div style={{ fontSize: 12, color: C.sub, marginTop: 5, lineHeight: 1.45 }}><b style={{ color: C.ink, fontWeight: 700, fontSize: 10, letterSpacing: ".04em" }}>HEALTH IMPACT</b><br />{c.note}</div>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.ink, marginBottom: 10 }}>Ingredients</div>
+      {ingredients.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 4 }}>
+          {ingredients.map((ing, i) => (<div key={i} style={{ display: "flex", alignItems: "center", gap: 10, color: C.ink, fontSize: 14 }}><span style={{ width: 6, height: 6, borderRadius: 99, background: C.sub, flex: "none" }} /> {ing}</div>))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>No ingredient label for this item. Scan a barcode or nutrition label and Nibbl AI will break down every ingredient.</div>
+      )}
+      <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 14 }}>AI-generated insights. Not medical advice.</div>
     </Sheet>
   );
 }
