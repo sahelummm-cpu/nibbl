@@ -64,10 +64,33 @@ function NibblMark({ size = 40, radius = 11 }) {
 const STEPS = [
   { key: "goal", q: "What's your goal?", opts: ["Lose weight", "Maintain", "Gain muscle"] },
   { key: "sex", q: "What's your sex?", opts: ["Female", "Male", "Other"] },
+  { key: "stats", q: "Tell us about you", type: "stats" },
   { key: "activity", q: "How active are you?", opts: ["Sedentary", "Lightly active", "Very active"] },
   { key: "pace", q: "How fast do you want results?", opts: ["Steady", "Moderate", "Aggressive"] },
 ];
-const TARGET = { "Lose weight": 1800, Maintain: 2200, "Gain muscle": 2700 };
+// Unit-aware conversions (values stored in the user's chosen unit)
+const toKg = (v, u) => (u === "imperial" ? v / 2.20462 : v);
+const toCm = (v, u) => (u === "imperial" ? v * 2.54 : v);
+const kgFmt = (kg, u) => (u === "imperial" ? Math.round(kg * 2.20462) : Math.round(kg * 10) / 10);
+// Mifflin-St Jeor TDEE -> calorie + macro targets
+function computeTargets(a, u) {
+  const kg = toKg(a.weight || (u === "imperial" ? 154 : 70), u);
+  const cm = toCm(a.height || (u === "imperial" ? 67 : 170), u);
+  const age = a.age || 30;
+  const sexAdj = a.sex === "Male" ? 5 : a.sex === "Female" ? -161 : -78;
+  const bmr = 10 * kg + 6.25 * cm - 5 * age + sexAdj;
+  const af = a.activity === "Very active" ? 1.55 : a.activity === "Lightly active" ? 1.375 : 1.2;
+  let tdee = bmr * af;
+  const pace = a.pace === "Aggressive" ? 750 : a.pace === "Moderate" ? 500 : 350;
+  if (a.goal === "Lose weight") tdee -= pace;
+  else if (a.goal === "Gain muscle") tdee += Math.min(pace, 500);
+  const calories = Math.max(1200, Math.round(tdee / 10) * 10);
+  const protein = Math.round(kg * (a.goal === "Gain muscle" ? 2.0 : 1.8));
+  const fat = Math.round((calories * 0.27) / 9);
+  const carbs = Math.max(0, Math.round((calories - protein * 4 - fat * 9) / 4));
+  const fiber = Math.round((calories / 1000) * 14);
+  return { calories, protein, carbs, fat, fiber, sodium: 2300 };
+}
 
 function foodEmoji(name) {
   const n = (name || "").toLowerCase();
@@ -148,13 +171,15 @@ export default function Nibbl() {
   const [scanner, setScanner] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
   const [lang, setLang] = useState("EN");
+  const [units, setUnits] = useState("metric");
   const t = T[lang];
   const rtl = lang === "AR";
 
-  const goalCal = TARGET[answers.goal] || 2500;
+  const auto = computeTargets(answers, units);
   const [goals, setGoals] = useState(null);
-  const target = goals ? goals.calories : goalCal;
-  const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat, fiber: goals.fiber, sodium: goals.sodium } : { protein: 263, carbs: 350, fat: 117, fiber: 30, sodium: 2300 };
+  const target = goals ? goals.calories : auto.calories;
+  const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat, fiber: goals.fiber, sodium: goals.sodium } : { protein: auto.protein, carbs: auto.carbs, fat: auto.fat, fiber: auto.fiber, sodium: auto.sodium };
+  const goalKg = answers.goalWeight ? toKg(answers.goalWeight, units) : null;
   const waterGoal = 8;
 
   const [logsByDay, setLogsByDay] = useState({ 0: [] });
@@ -177,6 +202,16 @@ export default function Nibbl() {
   };
   const updateMeal = (id, m) => setLog((l) => l.map((x) => (x.id === id ? { ...x, ...m } : x)));
   const removeMeal = (id) => setLog((l) => l.filter((x) => x.id !== id));
+
+  const finishOnboarding = () => {
+    const w = answers.weight;
+    if (w) {
+      const cur = toKg(w, units); const d = new Date(); const past = new Date(d); past.setDate(d.getDate() - 14);
+      const drift = answers.goal === "Lose weight" ? 1.8 : answers.goal === "Gain muscle" ? -1.2 : 0.4;
+      setWeights([{ date: (past.getMonth() + 1) + "/" + past.getDate(), kg: Math.round((cur + drift) * 10) / 10 }, { date: (d.getMonth() + 1) + "/" + d.getDate(), kg: cur }]);
+    }
+    setScreen("paywall");
+  };
 
   const [savedMeals, setSavedMeals] = useState([
     { name: "Grilled chicken bowl", calories: 520, protein: 42, carbs: 38, fat: 18, fiber: 7, sodium: 640, sugar: 6, ingredients: ["Chicken breast", "Brown rice", "Avocado", "Cherry tomato", "Olive oil"] },
@@ -211,18 +246,21 @@ export default function Nibbl() {
   if (screen === "onboarding") {
     const step = STEPS[obIndex];
     const pct = (obIndex / STEPS.length) * 100;
-    const pick = (opt) => { setAnswers({ ...answers, [step.key]: opt }); setTimeout(() => { if (obIndex < STEPS.length - 1) setObIndex(obIndex + 1); else setScreen("paywall"); }, 180); };
+    const next = () => { if (obIndex < STEPS.length - 1) setObIndex(obIndex + 1); else finishOnboarding(); };
+    const pick = (opt) => { setAnswers({ ...answers, [step.key]: opt }); setTimeout(next, 180); };
     return (
-      <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 22px", background: C.cream }}>
+      <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 22px", background: C.cream, overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
           <button onClick={() => (obIndex > 0 ? setObIndex(obIndex - 1) : setScreen("splash"))} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 4 }}><ChevronLeft size={26} color={C.ink} /></button>
           <div style={{ flex: 1, height: 8, background: "#EFE6D8", borderRadius: 99 }}><div style={{ width: pct + "%", height: "100%", background: C.accent, borderRadius: 99, transition: "width .3s" }} /></div>
         </div>
         <NibblMark size={34} />
         <h2 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, lineHeight: 1.15, margin: "14px 0 28px" }}>{step.q}</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {step.opts.map((o) => { const sel = answers[step.key] === o; return <button key={o} onClick={() => pick(o)} style={{ textAlign: "left", padding: "20px 22px", borderRadius: 20, border: "2px solid " + (sel ? C.accent : "transparent"), background: "#fff", fontSize: 18, fontWeight: 600, color: C.ink, fontFamily: DISP, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,.04)" }}>{o}</button>; })}
-        </div>
+        {step.type === "stats"
+          ? <StatsStep answers={answers} setAnswers={setAnswers} units={units} setUnits={setUnits} onContinue={next} />
+          : <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {step.opts.map((o) => { const sel = answers[step.key] === o; return <button key={o} onClick={() => pick(o)} style={{ textAlign: "left", padding: "20px 22px", borderRadius: 20, border: "2px solid " + (sel ? C.accent : "transparent"), background: "#fff", fontSize: 18, fontWeight: 600, color: C.ink, fontFamily: DISP, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,.04)" }}>{o}</button>; })}
+            </div>}
       </div></Phone>
     );
   }
@@ -234,8 +272,8 @@ export default function Nibbl() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
           {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} />}
-          {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} />}
-          {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} />}
+          {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} units={units} goalKg={goalKg} />}
+          {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} units={units} setUnits={setUnits} />}
         </div>
         <TabBar tab={tab} setTab={setTab} t={t} onScan={() => setScanner(true)} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} />
 
@@ -384,6 +422,39 @@ function GoalsSheet({ onClose, current, onSave, t }) {
       <Row label={t.sodium + " (mg)"} k="sodium" step={100} color={C.sodium} />
       <button onClick={() => onSave(g)} style={{ width: "100%", marginTop: 20, background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>{t.save}</button>
     </Sheet>
+  );
+}
+
+function StatsStep({ answers, setAnswers, units, setUnits, onContinue }) {
+  const set = (k, v) => setAnswers((a) => ({ ...a, [k]: v === "" ? "" : Number(v) }));
+  const wU = units === "imperial" ? "lb" : "kg";
+  const hU = units === "imperial" ? "in" : "cm";
+  const field = (label, k, unit, ph) => (
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 12, color: C.sub, fontWeight: 600, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #EFE6D8", borderRadius: 14, padding: "12px 14px" }}>
+        <input type="number" inputMode="numeric" value={answers[k] ?? ""} onChange={(e) => set(k, e.target.value)} placeholder={ph} style={{ border: "none", outline: "none", width: "100%", minWidth: 0, fontSize: 18, fontWeight: 700, color: C.ink, fontFamily: DISP, background: "transparent" }} />
+        {unit && <span style={{ color: C.sub, fontWeight: 600, fontSize: 13 }}>{unit}</span>}
+      </div>
+    </div>
+  );
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, background: C.grayBg, borderRadius: 14, padding: 4 }}>
+        {[["metric", "Metric"], ["imperial", "Imperial"]].map((s) => (
+          <button key={s[0]} onClick={() => setUnits(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "10px 0", borderRadius: 11, fontWeight: 700, fontSize: 14, background: units === s[0] ? "#fff" : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 2px 6px rgba(0,0,0,.06)" : "none" }}>{s[1]}</button>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        {field("Age", "age", "yrs", "30")}
+        {field("Height", "height", hU, units === "imperial" ? "67" : "170")}
+      </div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+        {field("Current weight", "weight", wU, units === "imperial" ? "154" : "70")}
+        {field("Goal weight", "goalWeight", wU, units === "imperial" ? "143" : "65")}
+      </div>
+      <button onClick={onContinue} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 16, padding: 17, fontWeight: 700, fontSize: 16, fontFamily: DISP, cursor: "pointer", boxShadow: "0 10px 20px -8px rgba(232,95,48,.5)" }}>Continue</button>
+    </div>
   );
 }
 
@@ -708,19 +779,35 @@ function WidgetSheet({ onClose, calLeft, consumed, target, macroTargets, streak,
 }
 const Bar = ({ c }) => <div style={{ flex: 1, height: 6, borderRadius: 9, background: c, opacity: .85 }} />;
 
-function ProgressTab({ weights, setWeights, totalCal, log, t }) {
+function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg }) {
+  const unit = units === "imperial" ? "lb" : "kg";
   const last = weights[weights.length - 1] ? weights[weights.length - 1].kg : 0;
   const first = weights[0] ? weights[0].kg : last;
   const delta = +(last - first).toFixed(1);
   const down = delta <= 0;
-  const min = Math.min.apply(null, weights.map((w) => w.kg)); const max = Math.max.apply(null, weights.map((w) => w.kg)); const range = max - min || 1;
-  const logWeight = () => { const v = prompt("Log weight (kg)"); const n = parseFloat(v); if (!isNaN(n)) { const d = new Date(); setWeights((w) => [...w, { date: (d.getMonth() + 1) + "/" + d.getDate(), kg: n }]); } };
+  const dispDelta = units === "imperial" ? Math.round(Math.abs(last - first) * 2.20462 * 10) / 10 : Math.abs(delta);
+  const vals = weights.map((w) => w.kg).concat(goalKg != null ? [goalKg] : []);
+  const min = Math.min.apply(null, vals); const max = Math.max.apply(null, vals); const range = max - min || 1;
+  const logWeight = () => { const v = prompt("Log weight (" + unit + ")"); const n = parseFloat(v); if (!isNaN(n)) { const d = new Date(); setWeights((w) => [...w, { date: (d.getMonth() + 1) + "/" + d.getDate(), kg: toKg(n, units) }]); } };
   const days = Math.min(log.length, 30);
   const dlc = 2 * Math.PI * 30;
-  const pts = weights.map((w, i) => ({ x: +((i / (weights.length - 1 || 1)) * 300).toFixed(1), y: +(100 - ((w.kg - min) / range) * 80).toFixed(1) }));
+  const yOf = (kg) => +(100 - ((kg - min) / range) * 80).toFixed(1);
+  const pts = weights.map((w, i) => ({ x: +((i / (weights.length - 1 || 1)) * 300).toFixed(1), y: yOf(w.kg) }));
   const line = pts.map((p, i) => (i ? "L" : "M") + p.x + " " + p.y).join(" ");
   const area = line + " L300 120 L0 120 Z";
   const end = pts[pts.length - 1] || { x: 300, y: 60 };
+  const parseD = (s) => { const a = (s || "").split("/").map(Number); return new Date(new Date().getFullYear(), (a[0] || 1) - 1, a[1] || 1); };
+  const daysBetween = Math.max(1, (parseD(weights[weights.length - 1] && weights[weights.length - 1].date) - parseD(weights[0] && weights[0].date)) / 86400000 || 14);
+  const ratePerWeek = (last - first) / (daysBetween / 7);
+  let proj = null;
+  if (goalKg != null && weights.length > 1) {
+    const need = goalKg - last;
+    if (Math.abs(need) < 0.3) proj = { ok: true, text: "You're at your goal weight 🎉" };
+    else if ((need < 0 && ratePerWeek < -0.05) || (need > 0 && ratePerWeek > 0.05)) {
+      const dt = new Date(); dt.setDate(dt.getDate() + Math.round(Math.abs(need / ratePerWeek) * 7));
+      proj = { ok: true, text: "On track to reach " + kgFmt(goalKg, units) + " " + unit + " by " + dt.toLocaleDateString(undefined, { month: "short", day: "numeric" }) };
+    } else proj = { ok: false, text: "Goal " + kgFmt(goalKg, units) + " " + unit + " — adjust intake to trend toward it." };
+  }
   return (
     <div style={{ padding: "18px 22px 110px" }}>
       <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: C.ink, marginBottom: 4 }}>{t.progress}</div>
@@ -728,16 +815,18 @@ function ProgressTab({ weights, setWeights, totalCal, log, t }) {
 
       <Card style={{ padding: 20, borderRadius: 26, marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-          <div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Current weight</div><div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 34, color: C.ink, letterSpacing: "-.02em" }}>{last}</span><span style={{ fontFamily: DISP, fontWeight: 600, fontSize: 14, color: C.ink, opacity: .5 }}>kg</span></div></div>
-          <button onClick={logWeight} title="Log weight" style={{ display: "flex", alignItems: "center", gap: 5, background: down ? "#E9F6EC" : "#FFEDE4", padding: "6px 11px", borderRadius: 99, border: "none", cursor: "pointer" }}>{down ? <TrendingDown size={13} color="#3E9B57" /> : <TrendingUp size={13} color={C.accentDark} />}<span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: down ? "#3E9B57" : C.accentDark }}>{Math.abs(delta)} kg</span></button>
+          <div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Current weight</div><div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 34, color: C.ink, letterSpacing: "-.02em" }}>{kgFmt(last, units)}</span><span style={{ fontFamily: DISP, fontWeight: 600, fontSize: 14, color: C.ink, opacity: .5 }}>{unit}</span></div></div>
+          <button onClick={logWeight} title="Log weight" style={{ display: "flex", alignItems: "center", gap: 5, background: down ? "#E9F6EC" : "#FFEDE4", padding: "6px 11px", borderRadius: 99, border: "none", cursor: "pointer" }}>{down ? <TrendingDown size={13} color="#3E9B57" /> : <TrendingUp size={13} color={C.accentDark} />}<span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: down ? "#3E9B57" : C.accentDark }}>{dispDelta} {unit}</span></button>
         </div>
         <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
           <defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FF7A4D" stopOpacity=".28" /><stop offset="1" stopColor="#FF7A4D" stopOpacity="0" /></linearGradient></defs>
           <path d={area} fill="url(#wfill)" />
+          {goalKg != null && <line x1="0" x2="300" y1={yOf(goalKg)} y2={yOf(goalKg)} stroke="#3E9B57" strokeWidth="1.5" strokeDasharray="5 5" opacity=".7" vectorEffect="non-scaling-stroke" />}
           <path d={line} fill="none" stroke="#E85F30" strokeWidth="3.5" strokeLinecap="round" />
           <circle cx={end.x} cy={end.y} r="5" fill="#E85F30" stroke="#fff" strokeWidth="2.5" />
         </svg>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontWeight: 500, fontSize: 11, color: C.ink, opacity: .4 }}><span>{weights[0] && weights[0].date}</span><span>{weights[weights.length - 1] && weights[weights.length - 1].date}</span></div>
+        {proj && <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 14, paddingTop: 14, borderTop: "1px solid #F0EADF" }}><span style={{ width: 8, height: 8, borderRadius: 99, background: proj.ok ? "#3E9B57" : C.accentDark, flex: "none" }} /><span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{proj.text}</span></div>}
       </Card>
 
       <Card style={{ padding: 18, borderRadius: 24, marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
@@ -756,7 +845,7 @@ function ProgressTab({ weights, setWeights, totalCal, log, t }) {
   );
 }
 
-function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, onWidgets, onReferral, onEditGoals, onLang }) {
+function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, onWidgets, onReferral, onEditGoals, onLang, units, setUnits }) {
   const cur = LANGS.find((l) => l.code === lang);
   return (
     <div style={{ padding: "18px 16px 90px" }}>
@@ -767,7 +856,13 @@ function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, on
         <div style={{ display: "flex", justifyContent: "space-around", padding: "0 18px 16px", textAlign: "center" }}>{[[target + "", "cal", C.flame], [macroTargets.protein + "g", t.protein, C.protein], [macroTargets.carbs + "g", t.carbs, C.carbs], [macroTargets.fat + "g", t.fat, C.fat]].map((row) => (<div key={row[1]}><div style={{ fontWeight: 800, fontSize: 17, color: C.ink }}><b style={{ color: row[2], fontSize: 11 }}>{"\u25CF"}</b> {row[0]}</div><div style={{ fontSize: 11, color: C.sub }}>{row[1]}</div></div>))}</div>
       </Card>
       <Card style={{ overflow: "hidden", marginBottom: 14 }}>
-        <SettingRow label={t.language} action={cur.flag + " " + cur.name} onClick={onLang} icon={<Globe size={18} color={C.sub} />} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px" }}>
+          <span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}><Scale size={18} color={C.sub} /> Units</span>
+          <div style={{ display: "flex", gap: 4, background: C.grayBg, borderRadius: 99, padding: 3 }}>
+            {[["metric", "kg/cm"], ["imperial", "lb/in"]].map((s) => (<button key={s[0]} onClick={() => setUnits(s[0])} style={{ border: "none", cursor: "pointer", padding: "5px 12px", borderRadius: 99, fontWeight: 700, fontSize: 12, background: units === s[0] ? "#fff" : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 1px 4px rgba(0,0,0,.08)" : "none" }}>{s[1]}</button>))}
+          </div>
+        </div>
+        <SettingRow label={t.language} action={cur.flag + " " + cur.name} onClick={onLang} icon={<Globe size={18} color={C.sub} />} top />
         <SettingRow label={t.widgets} action={"\u203A"} onClick={onWidgets} top />
         <SettingRow label={t.invite} action={"\u203A"} onClick={onReferral} top />
       </Card>
