@@ -202,14 +202,23 @@ export default function Nibbl() {
 
   const [logsByDay, setLogsByDay] = useState({ 0: [] });
   const [waterByDay, setWaterByDay] = useState({ 0: 0 });
+  const [exByDay, setExByDay] = useState({ 0: [] });
   const log = logsByDay[dayOffset] || [];
   const water = waterByDay[dayOffset] || 0;
+  const exercises = exByDay[dayOffset] || [];
   const setLog = (fn) => setLogsByDay((m) => ({ ...m, [dayOffset]: fn(m[dayOffset] || []) }));
   const setWater = (n) => setWaterByDay((m) => ({ ...m, [dayOffset]: Math.max(0, n) }));
+  const addExercise = (e) => setExByDay((m) => ({ ...m, [dayOffset]: [{ ...e, id: Date.now() }, ...(m[dayOffset] || [])] }));
 
   const [weights, setWeights] = useState([{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
   const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat, fb: a.fb + (m.fiber || 0), na: a.na + (m.sodium || 0) }), { cal: 0, p: 0, c: 0, f: 0, fb: 0, na: 0 });
-  const calLeft = target - consumed.cal;
+  const burned = exercises.reduce((a, e) => a + e.calories, 0);
+  const calLeft = target + burned - consumed.cal;
+
+  const dayTotals = Object.values(logsByDay).filter((d) => d.length).map((d) => d.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat }), { cal: 0, p: 0, c: 0, f: 0 }));
+  const nDays = dayTotals.length || 1;
+  const sumT = dayTotals.reduce((a, d) => ({ cal: a.cal + d.cal, p: a.p + d.p, c: a.c + d.c, f: a.f + d.f }), { cal: 0, p: 0, c: 0, f: 0 });
+  const weekly = { days: dayTotals.length, avgCal: Math.round(sumT.cal / nDays), pPct: Math.round((sumT.p / nDays / macroTargets.protein) * 100), cPct: Math.round((sumT.c / nDays / macroTargets.carbs) * 100), fPct: Math.round((sumT.f / nDays / macroTargets.fat) * 100) };
 
   const [recents, setRecents] = useState([]);
   const FREE_LIMIT = 3;
@@ -293,8 +302,8 @@ export default function Nibbl() {
     <Phone>{wrap(
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} />}
-          {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} units={units} goalKg={goalKg} />}
+          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} burned={burned} exercises={exercises} onAddExercise={() => setSheet("exercise")} />}
+          {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} units={units} goalKg={goalKg} weekly={weekly} onRecap={() => (pro ? setSheet("recap") : setScreen("paywall"))} />}
           {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} units={units} setUnits={setUnits} />}
         </div>
         <TabBar tab={tab} setTab={setTab} t={t} onScan={() => setScanner(true)} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} />
@@ -302,6 +311,8 @@ export default function Nibbl() {
         {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
         {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} savedMeals={savedMeals} isSaved={isSaved} onToggleSave={toggleSaved} t={t} recents={recents} onNewRecipe={() => setSheet("recipe")} />}
         {sheet === "recipe" && <RecipeSheet onClose={() => setSheet(null)} onSave={(r) => { setSavedMeals((l) => [r, ...l.filter((x) => x.name !== r.name)]); setSheet(null); }} />}
+        {sheet === "exercise" && <ExerciseSheet onClose={() => setSheet(null)} onAdd={(e) => { addExercise(e); setSheet(null); }} />}
+        {sheet === "recap" && <RecapSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} burned={burned} />}
         {sheet === "coach" && <CoachSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} />}
         {sheet === "referral" && <ReferralSheet onClose={() => setSheet(null)} />}
         {sheet === "widgets" && <WidgetSheet onClose={() => setSheet(null)} calLeft={calLeft} consumed={consumed} target={target} macroTargets={macroTargets} streak={log.length} t={t} />}
@@ -496,7 +507,7 @@ function LangSheet({ onClose, lang, setLang, title }) {
   );
 }
 
-function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd, onInsight }) {
+function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd, onInsight, burned, exercises, onAddExercise }) {
   const over = calLeft < 0;
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date();
@@ -525,7 +536,7 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
           </button>); })}
       </div>
       <Card style={{ padding: 20, display: "flex", alignItems: "center", gap: 18, marginBottom: 14 }}>
-        <GradientRing pct={Math.min(consumed.cal / target, 1)} value={Math.abs(calLeft)} label={over ? t.caloriesOver : t.caloriesLeft} over={over} />
+        <GradientRing pct={Math.min(consumed.cal / (target + (burned || 0)), 1)} value={Math.abs(calLeft)} label={over ? t.caloriesOver : t.caloriesLeft} over={over} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 13 }}>
           <MacroBar label={t.protein} have={consumed.p} goal={macroTargets.protein} color={C.protein} track="#FDECEC" />
           <MacroBar label={t.carbs} have={consumed.c} goal={macroTargets.carbs} color={C.carbs} track="#FCF1E2" />
@@ -556,6 +567,13 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
           <div><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14 }}>Ask Nibbl {!pro && <Lock size={11} style={{ verticalAlign: "middle" }} />}</div><div style={{ fontWeight: 500, fontSize: 11, color: "rgba(255,255,255,.7)", marginTop: 2 }}>{t.askCoach}</div></div>
         </button>
       </div>
+      <Card style={{ padding: 16, marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 38, height: 38, borderRadius: 12, background: "#FFEDE4", display: "grid", placeItems: "center" }}><Dumbbell size={18} color={C.accentDark} /></div><div><div style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Exercise</div><div style={{ fontSize: 12, color: C.sub }}>{burned > 0 ? "+" + burned + " cal added to your budget" : "Log a workout to earn calories"}</div></div></div>
+          <button onClick={onAddExercise} style={{ border: "none", background: C.accent, color: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: "pointer", flex: "none" }}><Plus size={18} /></button>
+        </div>
+        {exercises && exercises.length > 0 && <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>{exercises.map((e) => (<span key={e.id} style={{ fontSize: 12, fontWeight: 600, color: C.ink, background: C.grayBg, borderRadius: 99, padding: "5px 10px" }}>{e.name} {"·"} {e.calories} cal</span>))}</div>}
+      </Card>
       <button onClick={onReferral} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 13, background: "linear-gradient(135deg,#FFF1E9,#FFE3D3)", borderRadius: 20, padding: 14, marginBottom: 16 }}>
         <div style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", display: "grid", placeItems: "center", flex: "none", boxShadow: "0 4px 10px -4px rgba(232,95,48,.4)" }}><Gift size={22} color={C.accentDark} /></div>
         <div style={{ flex: 1 }}><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{t.refer}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .55, marginTop: 2 }}>{t.referSub}</div></div>
@@ -671,6 +689,42 @@ function RecipeSheet({ onClose, onSave }) {
         {[["Cal", per(sum.calories), C.ink], ["P", per(sum.protein) + "g", C.protein], ["C", per(sum.carbs) + "g", C.carbs], ["F", per(sum.fat) + "g", C.fat]].map((r) => (<div key={r[0]}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: r[2] }}>{r[1]}</div><div style={{ fontSize: 11, color: C.sub }}>{r[0]} / serving</div></div>))}
       </div>
       <button disabled={!canSave} onClick={save} style={{ width: "100%", background: canSave ? C.accent : "#E7DFD2", color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: canSave ? "pointer" : "default" }}>Save recipe</button>
+    </Sheet>
+  );
+}
+
+const EX_PRESETS = [["Walk", "🚶", 4], ["Run", "🏃", 11], ["Cycle", "🚴", 8], ["Strength", "🏋️", 6], ["Yoga", "🧘", 3], ["HIIT", "🔥", 12], ["Swim", "🏊", 9]];
+function ExerciseSheet({ onClose, onAdd }) {
+  const [sel, setSel] = useState(0); const [min, setMin] = useState(30);
+  const cal = Math.round(EX_PRESETS[sel][2] * min);
+  return (
+    <Sheet onClose={onClose} title="Log exercise">
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>{EX_PRESETS.map((p, i) => (<button key={p[0]} onClick={() => setSel(i)} style={{ border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 14, fontWeight: 700, fontSize: 14, background: sel === i ? C.ink : C.grayBg, color: sel === i ? "#fff" : C.ink, display: "flex", alignItems: "center", gap: 6 }}>{p[1]} {p[0]}</button>))}</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <span style={{ color: C.ink, fontWeight: 600 }}>Minutes</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><button onClick={() => setMin((m) => Math.max(5, m - 5))} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button><span style={{ minWidth: 50, textAlign: "center", fontWeight: 800, fontSize: 20, color: C.ink, fontFamily: DISP }}>{min}</span><button onClick={() => setMin((m) => m + 5)} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={18} color="#fff" /></button></div>
+      </div>
+      <Card style={{ padding: 16, marginBottom: 16, textAlign: "center" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 30, color: C.accentDark }}>+{cal}</div><div style={{ fontSize: 12, color: C.sub }}>calories burned</div></Card>
+      <button onClick={() => onAdd({ name: EX_PRESETS[sel][0], calories: cal })} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Add to day</button>
+    </Sheet>
+  );
+}
+
+function RecapSheet({ onClose, consumed, target, macroTargets, burned }) {
+  const [text, setText] = useState(""); const [loading, setLoading] = useState(true);
+  React.useEffect(() => { (async () => {
+    const ctx = "Target " + target + " kcal. Eaten " + consumed.cal + " kcal (protein " + consumed.p + "/" + macroTargets.protein + "g, carbs " + consumed.c + "/" + macroTargets.carbs + "g, fat " + consumed.f + "/" + macroTargets.fat + "g, fiber " + consumed.fb + "g, sodium " + consumed.na + "mg). Exercise burned " + burned + " kcal.";
+    try {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 400, messages: [{ role: "user", content: "You are a concise, encouraging nutrition coach. Give a 2-3 sentence recap of how the user's day went and ONE specific, actionable tip. Not medical advice.\n\n" + ctx }] }) });
+      const data = await resp.json(); setText(data.content.filter((i) => i.type === "text").map((i) => i.text).join(""));
+    } catch (e) { setText("Couldn't generate a recap right now. You ate " + consumed.cal + " of " + target + " kcal today — keep it up and check back later."); }
+    setLoading(false);
+  })(); }, []);
+  return (
+    <Sheet onClose={onClose} title="AI daily recap">
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", display: "grid", placeItems: "center" }}><Sparkles size={20} color="#fff" /></div><div style={{ fontWeight: 700, color: C.ink, fontFamily: DISP, fontSize: 16 }}>Today at a glance</div></div>
+      {loading ? <div style={{ color: C.sub, padding: "10px 0" }}>Analyzing your day…</div> : <div style={{ color: C.ink, fontSize: 15, lineHeight: 1.55 }}>{text}</div>}
+      <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 16 }}>AI-generated. Not medical advice.</div>
     </Sheet>
   );
 }
@@ -827,7 +881,7 @@ function WidgetSheet({ onClose, calLeft, consumed, target, macroTargets, streak,
 }
 const Bar = ({ c }) => <div style={{ flex: 1, height: 6, borderRadius: 9, background: c, opacity: .85 }} />;
 
-function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg }) {
+function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg, weekly, onRecap }) {
   const unit = units === "imperial" ? "lb" : "kg";
   const last = weights[weights.length - 1] ? weights[weights.length - 1].kg : 0;
   const first = weights[0] ? weights[0].kg : last;
@@ -859,7 +913,13 @@ function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg }) {
   return (
     <div style={{ padding: "18px 22px 110px" }}>
       <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: C.ink, marginBottom: 4 }}>{t.progress}</div>
-      <div style={{ fontWeight: 500, fontSize: 13, color: C.ink, opacity: .5, marginBottom: 20 }}>Last 30 days</div>
+      <div style={{ fontWeight: 500, fontSize: 13, color: C.ink, opacity: .5, marginBottom: 16 }}>Last 30 days</div>
+
+      <button onClick={onRecap} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, background: "linear-gradient(135deg,#1B2A2A,#26403d)", borderRadius: 20, padding: 16, marginBottom: 16, boxShadow: "0 14px 28px -16px rgba(27,42,42,.5)" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,.12)", display: "grid", placeItems: "center", flex: "none" }}><Sparkles size={20} color={C.accent} /></div>
+        <div style={{ flex: 1 }}><div style={{ color: "#fff", fontWeight: 700, fontFamily: DISP }}>AI daily recap</div><div style={{ color: "rgba(255,255,255,.65)", fontSize: 12 }}>How today went, plus one tip</div></div>
+        <ChevronRight size={20} color="rgba(255,255,255,.5)" />
+      </button>
 
       <Card style={{ padding: 20, borderRadius: 26, marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
@@ -885,10 +945,23 @@ function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg }) {
         <div><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>Days logged</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 2 }}>of 30 days</div></div>
       </Card>
 
-      <div style={{ display: "flex", gap: 12 }}>
-        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{totalCal.toLocaleString()}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Avg daily kcal</div></Card>
-        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ display: "flex", alignItems: "center", gap: 6 }}><Flame size={18} color={C.accent} fill={C.accent} /><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{log.length}</div></div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Day streak</div></Card>
+      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{(weekly ? weekly.avgCal : totalCal).toLocaleString()}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Avg daily kcal</div></Card>
+        <Card style={{ flex: 1, padding: 16, borderRadius: 22 }}><div style={{ display: "flex", alignItems: "center", gap: 6 }}><Flame size={18} color={C.accent} fill={C.accent} /><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 24, color: C.ink }}>{weekly ? weekly.days : log.length}</div></div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5, marginTop: 3 }}>Days logged</div></Card>
       </div>
+
+      <Card style={{ padding: 18, borderRadius: 22 }}>
+        <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 15, color: C.ink, marginBottom: 14 }}>Macro adherence</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {[[t.protein, weekly ? weekly.pPct : 0, C.protein, C.pTrack], [t.carbs, weekly ? weekly.cPct : 0, C.carbs, C.cTrack], [t.fat, weekly ? weekly.fPct : 0, C.fat, C.fTrack]].map((r) => (
+            <div key={r[0]}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}><span style={{ fontWeight: 600, fontSize: 12, color: C.ink }}>{r[0]}</span><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: C.ink, opacity: .55 }}>{r[1]}%</span></div>
+              <div style={{ height: 7, borderRadius: 9, background: r[3], overflow: "hidden" }}><div style={{ width: Math.min(r[1], 100) + "%", height: "100%", borderRadius: 9, background: r[2] }} /></div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: C.sub, marginTop: 12 }}>Average of your daily targets hit{weekly && weekly.days ? " over " + weekly.days + " logged day" + (weekly.days > 1 ? "s" : "") : ""}.</div>
+      </Card>
     </div>
   );
 }
