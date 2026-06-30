@@ -201,6 +201,7 @@ export default function Nibbl() {
   const [lang, setLang] = useState(SAVED.lang || "EN");
   const [units, setUnits] = useState(SAVED.units || "metric");
   const [theme, setTheme] = useState(SAVED.theme || "light");
+  const [exSource, setExSource] = useState(SAVED.exSource || null);
   applyTheme(theme);
   const t = T[lang];
   const rtl = lang === "AR";
@@ -234,7 +235,7 @@ export default function Nibbl() {
 
   const [recents, setRecents] = useState(SAVED.recents || []);
   React.useEffect(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ screen, answers, goals, units, lang, theme, pro, logsByDay, waterByDay, exByDay, savedMeals, recents, weights })); } catch (e) {}
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ screen, answers, goals, units, lang, theme, exSource, pro, logsByDay, waterByDay, exByDay, savedMeals, recents, weights })); } catch (e) {}
   });
   const FREE_LIMIT = 3;
   const addMeal = (m) => {
@@ -317,7 +318,7 @@ export default function Nibbl() {
     <Phone>{wrap(
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} burned={burned} exercises={exercises} onAddExercise={() => setSheet("exercise")} />}
+          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} burned={burned} exercises={exercises} onAddExercise={() => setSheet("exercise")} exSource={exSource} />}
           {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} units={units} goalKg={goalKg} weekly={weekly} onRecap={() => (pro ? setSheet("recap") : setScreen("paywall"))} />}
           {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} units={units} setUnits={setUnits} theme={theme} setTheme={setTheme} />}
         </div>
@@ -326,7 +327,7 @@ export default function Nibbl() {
         {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
         {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} savedMeals={savedMeals} isSaved={isSaved} onToggleSave={toggleSaved} t={t} recents={recents} onNewRecipe={() => setSheet("recipe")} />}
         {sheet === "recipe" && <RecipeSheet onClose={() => setSheet(null)} onSave={(r) => { setSavedMeals((l) => [r, ...l.filter((x) => x.name !== r.name)]); setSheet(null); }} />}
-        {sheet === "exercise" && <ExerciseSheet onClose={() => setSheet(null)} onAdd={(e) => { addExercise(e); setSheet(null); }} />}
+        {sheet === "exercise" && <ExerciseSheet onClose={() => setSheet(null)} onAdd={(e) => addExercise(e)} source={exSource} onConnect={setExSource} />}
         {sheet === "recap" && <RecapSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} burned={burned} />}
         {sheet === "coach" && <CoachSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} />}
         {sheet === "referral" && <ReferralSheet onClose={() => setSheet(null)} />}
@@ -522,7 +523,7 @@ function LangSheet({ onClose, lang, setLang, title }) {
   );
 }
 
-function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd, onInsight, burned, exercises, onAddExercise }) {
+function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd, onInsight, burned, exercises, onAddExercise, exSource }) {
   const over = calLeft < 0;
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date();
@@ -584,7 +585,7 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
       </div>
       <Card style={{ padding: 16, marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 38, height: 38, borderRadius: 12, background: "#FFEDE4", display: "grid", placeItems: "center" }}><Dumbbell size={18} color={C.accentDark} /></div><div><div style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Exercise</div><div style={{ fontSize: 12, color: C.sub }}>{burned > 0 ? "+" + burned + " cal added to your budget" : "Log a workout to earn calories"}</div></div></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 38, height: 38, borderRadius: 12, background: "#FFEDE4", display: "grid", placeItems: "center" }}><Dumbbell size={18} color={C.accentDark} /></div><div><div style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Exercise</div><div style={{ fontSize: 12, color: C.sub }}>{burned > 0 ? (exSource ? "Synced from " + exSource + " " + "·" + " +" + burned + " cal" : "+" + burned + " cal added to your budget") : (exSource ? "Connected to " + exSource : "Log a workout to earn calories")}</div></div></div>
           <button onClick={onAddExercise} style={{ border: "none", background: C.accent, color: "#fff", borderRadius: 99, width: 34, height: 34, display: "grid", placeItems: "center", cursor: "pointer", flex: "none" }}><Plus size={18} /></button>
         </div>
         {exercises && exercises.length > 0 && <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>{exercises.map((e) => (<span key={e.id} style={{ fontSize: 12, fontWeight: 600, color: C.ink, background: C.grayBg, borderRadius: 99, padding: "5px 10px" }}>{e.name} {"·"} {e.calories} cal</span>))}</div>}
@@ -709,18 +710,61 @@ function RecipeSheet({ onClose, onSave }) {
 }
 
 const EX_PRESETS = [["Walk", "🚶", 4], ["Run", "🏃", 11], ["Cycle", "🚴", 8], ["Strength", "🏋️", 6], ["Yoga", "🧘", 3], ["HIIT", "🔥", 12], ["Swim", "🏊", 9]];
-function ExerciseSheet({ onClose, onAdd }) {
+const EX_SOURCES = [["Apple Health", "❤️"], ["Apple Watch", "⌚"], ["Google Fit", "🟢"], ["Fitbit", "🔷"], ["Garmin", "🔵"], ["Strava", "🟧"]];
+const SYNC_WORKOUTS = {
+  "Apple Health": [["Morning run", "🏃", 412, "5.2 km"], ["Walk", "🚶", 168, "3,210 steps"], ["Strength", "🏋️", 245, "42 min"]],
+  "Apple Watch": [["Outdoor run", "🏃", 436, "6.0 km"], ["Move + exercise", "⌚", 120, "all-day"], ["HIIT", "🔥", 310, "25 min"]],
+  "Google Fit": [["Cycling", "🚴", 380, "14 km"], ["Walk", "🚶", 210, "4,800 steps"], ["Workout", "🏋️", 260, "38 min"]],
+  "Fitbit": [["Run", "🏃", 398, "5.0 km"], ["Active zone", "💓", 180, "32 min"], ["Steps", "🚶", 240, "9,120 steps"]],
+  "Garmin": [["Trail run", "🏃", 520, "7.4 km"], ["Ride", "🚴", 430, "18 km"], ["Swim", "🏊", 300, "1,500 m"]],
+  "Strava": [["Long run", "🏃", 610, "9.1 km"], ["Group ride", "🚴", 480, "22 km"], ["Yoga", "🧘", 110, "40 min"]],
+};
+function ExerciseSheet({ onClose, onAdd, source, onConnect }) {
+  const [mode, setMode] = useState("log");
   const [sel, setSel] = useState(0); const [min, setMin] = useState(30);
   const cal = Math.round(EX_PRESETS[sel][2] * min);
+  const [src, setSrc] = useState(source || null);
+  const [status, setStatus] = useState(source ? "done" : "idle"); // idle | syncing | done
+  const [added, setAdded] = useState({});
+  const workouts = src ? SYNC_WORKOUTS[src] : [];
+  const sync = (s) => { setSrc(s); setStatus("syncing"); setAdded({}); setTimeout(() => setStatus("done"), 800); };
+  const importOne = (w, i) => { onAdd({ name: w[0], calories: w[2] }); onConnect(src); setAdded((a) => ({ ...a, [i]: true })); };
+  const importAll = () => { workouts.forEach((w, i) => { if (!added[i]) onAdd({ name: w[0], calories: w[2] }); }); onConnect(src); onClose(); };
   return (
-    <Sheet onClose={onClose} title="Log exercise">
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>{EX_PRESETS.map((p, i) => (<button key={p[0]} onClick={() => setSel(i)} style={{ border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 14, fontWeight: 700, fontSize: 14, background: sel === i ? INK : C.grayBg, color: sel === i ? "#fff" : C.ink, display: "flex", alignItems: "center", gap: 6 }}>{p[1]} {p[0]}</button>))}</div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <span style={{ color: C.ink, fontWeight: 600 }}>Minutes</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><button onClick={() => setMin((m) => Math.max(5, m - 5))} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button><span style={{ minWidth: 50, textAlign: "center", fontWeight: 800, fontSize: 20, color: C.ink, fontFamily: DISP }}>{min}</span><button onClick={() => setMin((m) => m + 5)} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={18} color="#fff" /></button></div>
+    <Sheet onClose={onClose} title="Add exercise">
+      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+        {[["log", "Log workout"], ["sync", "Sync from app"]].map((s) => (<button key={s[0]} onClick={() => setMode(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: mode === s[0] ? INK : C.grayBg, color: mode === s[0] ? "#fff" : C.ink }}>{s[1]}</button>))}
       </div>
-      <Card style={{ padding: 16, marginBottom: 16, textAlign: "center" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 30, color: C.accentDark }}>+{cal}</div><div style={{ fontSize: 12, color: C.sub }}>calories burned</div></Card>
-      <button onClick={() => onAdd({ name: EX_PRESETS[sel][0], calories: cal })} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Add to day</button>
+
+      {mode === "log" && (<>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>{EX_PRESETS.map((p, i) => (<button key={p[0]} onClick={() => setSel(i)} style={{ border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 14, fontWeight: 700, fontSize: 14, background: sel === i ? INK : C.grayBg, color: sel === i ? "#fff" : C.ink, display: "flex", alignItems: "center", gap: 6 }}>{p[1]} {p[0]}</button>))}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+          <span style={{ color: C.ink, fontWeight: 600 }}>Minutes</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}><button onClick={() => setMin((m) => Math.max(5, m - 5))} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button><span style={{ minWidth: 50, textAlign: "center", fontWeight: 800, fontSize: 20, color: C.ink, fontFamily: DISP }}>{min}</span><button onClick={() => setMin((m) => m + 5)} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={18} color="#fff" /></button></div>
+        </div>
+        <Card style={{ padding: 16, marginBottom: 16, textAlign: "center" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 30, color: C.accentDark }}>+{cal}</div><div style={{ fontSize: 12, color: C.sub }}>calories burned</div></Card>
+        <button onClick={() => { onAdd({ name: EX_PRESETS[sel][0], calories: cal }); onClose(); }} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Add to day</button>
+      </>)}
+
+      {mode === "sync" && (<>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>{EX_SOURCES.map((s) => (<button key={s[0]} onClick={() => sync(s[0])} style={{ display: "flex", alignItems: "center", gap: 7, border: "1.5px solid " + (src === s[0] ? C.accent : C.border), background: src === s[0] ? C.warm : C.card, color: C.ink, cursor: "pointer", padding: "9px 12px", borderRadius: 13, fontWeight: 700, fontSize: 13 }}><span style={{ fontSize: 16 }}>{s[1]}</span>{s[0]}</button>))}</div>
+        {status === "idle" && <div style={{ color: C.sub, fontSize: 13, textAlign: "center", padding: "18px 10px" }}>Choose a source to sync recent workouts.</div>}
+        {status === "syncing" && <div style={{ color: C.sub, fontSize: 14, textAlign: "center", padding: "18px 10px" }}>Syncing from {src}…</div>}
+        {status === "done" && (<>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}><span style={{ fontWeight: 700, fontSize: 13, color: C.ink }}>Recent from {src}</span><button onClick={() => sync(src)} style={{ border: "none", background: "transparent", color: C.accent, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>↻ Refresh</button></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+            {workouts.map((w, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, border: "1px solid " + C.border, background: C.card, borderRadius: 12, padding: 12 }}>
+                <span style={{ fontSize: 22 }}>{w[1]}</span>
+                <div style={{ flex: 1 }}><div style={{ fontWeight: 600, color: C.ink }}>{w[0]}</div><div style={{ fontSize: 12, color: C.sub }}>{w[3]} {"·"} {w[2]} cal</div></div>
+                {added[i] ? <Check size={20} color="#3E9B57" /> : <button onClick={() => importOne(w, i)} style={{ border: "none", background: C.accent, color: "#fff", borderRadius: 99, width: 30, height: 30, display: "grid", placeItems: "center", cursor: "pointer" }}><Plus size={18} /></button>}
+              </div>
+            ))}
+          </div>
+          <button onClick={importAll} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Import all from {src}</button>
+        </>)}
+        <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 14 }}>Demo sync. Live Apple Health / Google Fit / wearable import needs native device APIs.</div>
+      </>)}
     </Sheet>
   );
 }
