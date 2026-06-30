@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe, Heart, User, TrendingUp, TrendingDown } from "lucide-react";
+import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Scale, ChevronLeft, ChevronRight, Check, Lock, Camera, ScanBarcode, ScanLine, Refrigerator, Search, GlassWater, Calendar, Sparkles, Pencil, Gift, Minus, X, Zap, Globe, Heart, User, TrendingUp, TrendingDown, Bookmark, BookmarkCheck } from "lucide-react";
 
 const C = {
   ink: "#1B2A2A", cream: "#FBF7F0", accent: "#FF7A4D", accentLight: "#FF8A5B", accentDark: "#E85F30",
@@ -7,6 +7,7 @@ const C = {
   flame: "#FF7A3D", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF",
   pTrack: "#FDECEC", cTrack: "#FCF1E2", fTrack: "#E8F3FD",
   pInk: "#C23B42", cInk: "#C57A1E", fInk: "#2C7EC0", ringTrack: "#F0E8DA",
+  fiber: "#5FB87A", fiberTrack: "#E6F4EA", sodium: "#8E7CE6", sodiumTrack: "#EDE9FB",
 };
 const BODY = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const DISP = "Poppins, system-ui, sans-serif";
@@ -19,11 +20,11 @@ const LANGS = [
   { code: "PT", flag: "\u{1F1E7}\u{1F1F7}", name: "Portugues" },
 ];
 const T = {
-  EN: { refer: "Refer & get 1 month free", referSub: "Invite a friend - you both get Pro free", tagline: "Snap it. Nibbl tracks it.", getStarted: "Get Started", haveAccount: "Already have an account?", signIn: "Sign In here", caloriesLeft: "Calories left", caloriesOver: "Calories over", protein: "Protein", carbs: "Carbs", fat: "Fat", left: "left", over: "over", water: "Water", glasses: "glasses", askCoach: "Ask your AI Coach", coachSub: "What should I eat to hit my macros?", todaysLog: "Today's Log", log: "Log", noMeals: "No meals logged yet. Tap + to add one.", today: "Today", yesterday: "Yesterday", addFood: "Add food", home: "Home", progress: "Progress", settings: "Settings", editGoals: "Edit goals", dailyTarget: "Daily target", goal: "Goal", sex: "Sex", activity: "Activity", pace: "Pace", language: "Language", save: "Save", scanMeal: "Scan a meal", scanBarcode: "Scan Barcode", scanLabel: "Scan Food Label", scanFridge: "Scan Fridge", alignBarcode: "Align the barcode in the frame to scan", food: "Food", barcode: "Barcode", foodLabel: "Food Label", fridge: "Fridge", upgrade: "Upgrade to Nibbl Pro", widgets: "Home & Lock Screen widgets", invite: "Invite friends - earn free month" },
-  ES: { refer: "Refiere y gana 1 mes gratis", referSub: "Invita a un amigo - ambos obtienen Pro gratis", tagline: "Foto y listo. Nibbl lo registra.", getStarted: "Empezar", haveAccount: "Ya tienes cuenta?", signIn: "Inicia sesion", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias de mas", protein: "Proteina", carbs: "Carbos", fat: "Grasa", left: "restante", over: "de mas", water: "Agua", glasses: "vasos", askCoach: "Pregunta a tu Coach IA", coachSub: "Que como para cumplir mis macros?", todaysLog: "Registro de hoy", log: "Registro", noMeals: "Sin comidas. Toca + para anadir.", today: "Hoy", yesterday: "Ayer", addFood: "Anadir comida", home: "Inicio", progress: "Progreso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Actividad", pace: "Ritmo", language: "Idioma", save: "Guardar", scanMeal: "Escanear comida", scanBarcode: "Escanear codigo", scanLabel: "Escanear etiqueta", scanFridge: "Escanear nevera", alignBarcode: "Alinea el codigo en el marco", food: "Comida", barcode: "Codigo", foodLabel: "Etiqueta", fridge: "Nevera", upgrade: "Mejora a Nibbl Pro", widgets: "Widgets de pantalla", invite: "Invita amigos - gana un mes gratis" },
-  AR: { refer: "\u0627\u062F\u0639\u064F \u0635\u062F\u064A\u0642\u064B\u0627 \u0648\u0627\u062D\u0635\u0644 \u0639\u0644\u0649 \u0634\u0647\u0631 \u0645\u062C\u0627\u0646\u064A", referSub: "\u0627\u062F\u0639\u064F \u0635\u062F\u064A\u0642\u064B\u0627 - \u064A\u062D\u0635\u0644 \u0643\u0644\u0627\u0643\u0645\u0627 \u0639\u0644\u0649 Pro \u0645\u062C\u0627\u0646\u064B\u0627", tagline: "\u0635\u0648\u0651\u0631\u0647\u0627. \u0646\u0650\u0628\u0644 \u064A\u062D\u0633\u0628\u0647\u0627.", getStarted: "\u0627\u0628\u062F\u0623", haveAccount: "\u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628\u061F", signIn: "\u0633\u062C\u0651\u0644 \u0627\u0644\u062F\u062E\u0648\u0644", caloriesLeft: "\u0633\u0639\u0631\u0627\u062A \u0645\u062A\u0628\u0642\u064A\u0629", caloriesOver: "\u0633\u0639\u0631\u0627\u062A \u0632\u0627\u0626\u062F\u0629", protein: "\u0628\u0631\u0648\u062A\u064A\u0646", carbs: "\u0643\u0631\u0628\u0648\u0647\u064A\u062F\u0631\u0627\u062A", fat: "\u062F\u0647\u0648\u0646", left: "\u0645\u062A\u0628\u0642\u064A", over: "\u0632\u0627\u0626\u062F", water: "\u0645\u0627\u0621", glasses: "\u0623\u0643\u0648\u0627\u0628", askCoach: "\u0627\u0633\u0623\u0644 \u0645\u062F\u0631\u0651\u0628 \u0627\u0644\u0630\u0643\u0627\u0621", coachSub: "\u0645\u0627\u0630\u0627 \u0622\u0643\u0644 \u0644\u0623\u062D\u0642\u0642 \u0623\u0647\u062F\u0627\u0641\u064A\u061F", todaysLog: "\u0633\u062C\u0644 \u0627\u0644\u064A\u0648\u0645", log: "\u0627\u0644\u0633\u062C\u0644", noMeals: "\u0644\u0627 \u0648\u062C\u0628\u0627\u062A. \u0627\u0636\u063A\u0637 + \u0644\u0644\u0625\u0636\u0627\u0641\u0629.", today: "\u0627\u0644\u064A\u0648\u0645", yesterday: "\u0623\u0645\u0633", addFood: "\u0623\u0636\u0641 \u0637\u0639\u0627\u0645\u064B\u0627", home: "\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629", progress: "\u0627\u0644\u062A\u0642\u062F\u0651\u0645", settings: "\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A", editGoals: "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0623\u0647\u062F\u0627\u0641", dailyTarget: "\u0627\u0644\u0647\u062F\u0641 \u0627\u0644\u064A\u0648\u0645\u064A", goal: "\u0627\u0644\u0647\u062F\u0641", sex: "\u0627\u0644\u062C\u0646\u0633", activity: "\u0627\u0644\u0646\u0634\u0627\u0637", pace: "\u0627\u0644\u0648\u062A\u064A\u0631\u0629", language: "\u0627\u0644\u0644\u063A\u0629", save: "\u062D\u0641\u0638", scanMeal: "\u0635\u0648\u0651\u0631 \u0648\u062C\u0628\u0629", scanBarcode: "\u0645\u0633\u062D \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F", scanLabel: "\u0645\u0633\u062D \u0627\u0644\u0645\u0644\u0635\u0642", scanFridge: "\u0645\u0633\u062D \u0627\u0644\u062B\u0644\u0627\u062C\u0629", alignBarcode: "\u062D\u0627\u0630\u0650 \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F \u062F\u0627\u062E\u0644 \u0627\u0644\u0625\u0637\u0627\u0631", food: "\u0637\u0639\u0627\u0645", barcode: "\u0628\u0627\u0631\u0643\u0648\u062F", foodLabel: "\u0645\u0644\u0635\u0642", fridge: "\u062B\u0644\u0627\u062C\u0629", upgrade: "\u0627\u0644\u062A\u0631\u0642\u064A\u0629 \u0625\u0644\u0649 Nibbl Pro", widgets: "\u0623\u062F\u0648\u0627\u062A \u0627\u0644\u0634\u0627\u0634\u0629", invite: "\u0627\u062F\u0639\u064F \u0623\u0635\u062F\u0642\u0627\u0621\u0643 - \u0627\u0643\u0633\u0628 \u0634\u0647\u0631\u064B\u0627 \u0645\u062C\u0627\u0646\u064A\u064B\u0627" },
-  FR: { refer: "Parrainez et gagnez 1 mois gratuit", referSub: "Invitez un ami - vous gagnez tous les deux Pro", tagline: "Photographiez. Nibbl compte.", getStarted: "Commencer", haveAccount: "Vous avez un compte ?", signIn: "Se connecter", caloriesLeft: "Calories restantes", caloriesOver: "Calories en trop", protein: "Proteines", carbs: "Glucides", fat: "Lipides", left: "restant", over: "en trop", water: "Eau", glasses: "verres", askCoach: "Demandez au Coach IA", coachSub: "Que manger pour mes macros ?", todaysLog: "Journal du jour", log: "Journal", noMeals: "Aucun repas. Touchez + pour ajouter.", today: "Aujourd'hui", yesterday: "Hier", addFood: "Ajouter", home: "Accueil", progress: "Progres", settings: "Reglages", editGoals: "Modifier objectifs", dailyTarget: "Objectif quotidien", goal: "Objectif", sex: "Sexe", activity: "Activite", pace: "Rythme", language: "Langue", save: "Enregistrer", scanMeal: "Scanner un repas", scanBarcode: "Scanner code-barres", scanLabel: "Scanner etiquette", scanFridge: "Scanner frigo", alignBarcode: "Alignez le code dans le cadre", food: "Repas", barcode: "Code", foodLabel: "Etiquette", fridge: "Frigo", upgrade: "Passer a Nibbl Pro", widgets: "Widgets d'ecran", invite: "Invitez des amis - mois gratuit" },
-  PT: { refer: "Indique e ganhe 1 mes gratis", referSub: "Convide um amigo - ambos ganham Pro gratis", tagline: "Foto e pronto. Nibbl registra.", getStarted: "Comecar", haveAccount: "Ja tem conta?", signIn: "Entrar", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias a mais", protein: "Proteina", carbs: "Carbos", fat: "Gordura", left: "restante", over: "a mais", water: "Agua", glasses: "copos", askCoach: "Pergunte ao Coach IA", coachSub: "O que comer para bater minhas macros?", todaysLog: "Registro de hoje", log: "Registro", noMeals: "Sem refeicoes. Toque + para adicionar.", today: "Hoje", yesterday: "Ontem", addFood: "Adicionar", home: "Inicio", progress: "Progresso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Atividade", pace: "Ritmo", language: "Idioma", save: "Salvar", scanMeal: "Escanear refeicao", scanBarcode: "Escanear codigo", scanLabel: "Escanear rotulo", scanFridge: "Escanear geladeira", alignBarcode: "Alinhe o codigo no quadro", food: "Comida", barcode: "Codigo", foodLabel: "Rotulo", fridge: "Geladeira", upgrade: "Assine o Nibbl Pro", widgets: "Widgets de tela", invite: "Convide amigos - ganhe um mes gratis" },
+  EN: { fiber: "Fiber", sodium: "Sodium", savedMeals: "Saved meals", quickAdd: "Quick add", refer: "Refer & get 1 month free", referSub: "Invite a friend - you both get Pro free", tagline: "Snap it. Nibbl tracks it.", getStarted: "Get Started", haveAccount: "Already have an account?", signIn: "Sign In here", caloriesLeft: "Calories left", caloriesOver: "Calories over", protein: "Protein", carbs: "Carbs", fat: "Fat", left: "left", over: "over", water: "Water", glasses: "glasses", askCoach: "Ask your AI Coach", coachSub: "What should I eat to hit my macros?", todaysLog: "Today's Log", log: "Log", noMeals: "No meals logged yet. Tap + to add one.", today: "Today", yesterday: "Yesterday", addFood: "Add food", home: "Home", progress: "Progress", settings: "Settings", editGoals: "Edit goals", dailyTarget: "Daily target", goal: "Goal", sex: "Sex", activity: "Activity", pace: "Pace", language: "Language", save: "Save", scanMeal: "Scan a meal", scanBarcode: "Scan Barcode", scanLabel: "Scan Food Label", scanFridge: "Scan Fridge", alignBarcode: "Align the barcode in the frame to scan", food: "Food", barcode: "Barcode", foodLabel: "Food Label", fridge: "Fridge", upgrade: "Upgrade to Nibbl Pro", widgets: "Home & Lock Screen widgets", invite: "Invite friends - earn free month" },
+  ES: { fiber: "Fibra", sodium: "Sodio", savedMeals: "Comidas guardadas", quickAdd: "Anadir rapido", refer: "Refiere y gana 1 mes gratis", referSub: "Invita a un amigo - ambos obtienen Pro gratis", tagline: "Foto y listo. Nibbl lo registra.", getStarted: "Empezar", haveAccount: "Ya tienes cuenta?", signIn: "Inicia sesion", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias de mas", protein: "Proteina", carbs: "Carbos", fat: "Grasa", left: "restante", over: "de mas", water: "Agua", glasses: "vasos", askCoach: "Pregunta a tu Coach IA", coachSub: "Que como para cumplir mis macros?", todaysLog: "Registro de hoy", log: "Registro", noMeals: "Sin comidas. Toca + para anadir.", today: "Hoy", yesterday: "Ayer", addFood: "Anadir comida", home: "Inicio", progress: "Progreso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Actividad", pace: "Ritmo", language: "Idioma", save: "Guardar", scanMeal: "Escanear comida", scanBarcode: "Escanear codigo", scanLabel: "Escanear etiqueta", scanFridge: "Escanear nevera", alignBarcode: "Alinea el codigo en el marco", food: "Comida", barcode: "Codigo", foodLabel: "Etiqueta", fridge: "Nevera", upgrade: "Mejora a Nibbl Pro", widgets: "Widgets de pantalla", invite: "Invita amigos - gana un mes gratis" },
+  AR: { fiber: "\u0623\u0644\u064A\u0627\u0641", sodium: "\u0635\u0648\u062F\u064A\u0648\u0645", savedMeals: "\u0648\u062C\u0628\u0627\u062A \u0645\u062D\u0641\u0648\u0638\u0629", quickAdd: "\u0625\u0636\u0627\u0641\u0629 \u0633\u0631\u064A\u0639\u0629", refer: "\u0627\u062F\u0639\u064F \u0635\u062F\u064A\u0642\u064B\u0627 \u0648\u0627\u062D\u0635\u0644 \u0639\u0644\u0649 \u0634\u0647\u0631 \u0645\u062C\u0627\u0646\u064A", referSub: "\u0627\u062F\u0639\u064F \u0635\u062F\u064A\u0642\u064B\u0627 - \u064A\u062D\u0635\u0644 \u0643\u0644\u0627\u0643\u0645\u0627 \u0639\u0644\u0649 Pro \u0645\u062C\u0627\u0646\u064B\u0627", tagline: "\u0635\u0648\u0651\u0631\u0647\u0627. \u0646\u0650\u0628\u0644 \u064A\u062D\u0633\u0628\u0647\u0627.", getStarted: "\u0627\u0628\u062F\u0623", haveAccount: "\u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628\u061F", signIn: "\u0633\u062C\u0651\u0644 \u0627\u0644\u062F\u062E\u0648\u0644", caloriesLeft: "\u0633\u0639\u0631\u0627\u062A \u0645\u062A\u0628\u0642\u064A\u0629", caloriesOver: "\u0633\u0639\u0631\u0627\u062A \u0632\u0627\u0626\u062F\u0629", protein: "\u0628\u0631\u0648\u062A\u064A\u0646", carbs: "\u0643\u0631\u0628\u0648\u0647\u064A\u062F\u0631\u0627\u062A", fat: "\u062F\u0647\u0648\u0646", left: "\u0645\u062A\u0628\u0642\u064A", over: "\u0632\u0627\u0626\u062F", water: "\u0645\u0627\u0621", glasses: "\u0623\u0643\u0648\u0627\u0628", askCoach: "\u0627\u0633\u0623\u0644 \u0645\u062F\u0631\u0651\u0628 \u0627\u0644\u0630\u0643\u0627\u0621", coachSub: "\u0645\u0627\u0630\u0627 \u0622\u0643\u0644 \u0644\u0623\u062D\u0642\u0642 \u0623\u0647\u062F\u0627\u0641\u064A\u061F", todaysLog: "\u0633\u062C\u0644 \u0627\u0644\u064A\u0648\u0645", log: "\u0627\u0644\u0633\u062C\u0644", noMeals: "\u0644\u0627 \u0648\u062C\u0628\u0627\u062A. \u0627\u0636\u063A\u0637 + \u0644\u0644\u0625\u0636\u0627\u0641\u0629.", today: "\u0627\u0644\u064A\u0648\u0645", yesterday: "\u0623\u0645\u0633", addFood: "\u0623\u0636\u0641 \u0637\u0639\u0627\u0645\u064B\u0627", home: "\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629", progress: "\u0627\u0644\u062A\u0642\u062F\u0651\u0645", settings: "\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A", editGoals: "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0623\u0647\u062F\u0627\u0641", dailyTarget: "\u0627\u0644\u0647\u062F\u0641 \u0627\u0644\u064A\u0648\u0645\u064A", goal: "\u0627\u0644\u0647\u062F\u0641", sex: "\u0627\u0644\u062C\u0646\u0633", activity: "\u0627\u0644\u0646\u0634\u0627\u0637", pace: "\u0627\u0644\u0648\u062A\u064A\u0631\u0629", language: "\u0627\u0644\u0644\u063A\u0629", save: "\u062D\u0641\u0638", scanMeal: "\u0635\u0648\u0651\u0631 \u0648\u062C\u0628\u0629", scanBarcode: "\u0645\u0633\u062D \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F", scanLabel: "\u0645\u0633\u062D \u0627\u0644\u0645\u0644\u0635\u0642", scanFridge: "\u0645\u0633\u062D \u0627\u0644\u062B\u0644\u0627\u062C\u0629", alignBarcode: "\u062D\u0627\u0630\u0650 \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062F \u062F\u0627\u062E\u0644 \u0627\u0644\u0625\u0637\u0627\u0631", food: "\u0637\u0639\u0627\u0645", barcode: "\u0628\u0627\u0631\u0643\u0648\u062F", foodLabel: "\u0645\u0644\u0635\u0642", fridge: "\u062B\u0644\u0627\u062C\u0629", upgrade: "\u0627\u0644\u062A\u0631\u0642\u064A\u0629 \u0625\u0644\u0649 Nibbl Pro", widgets: "\u0623\u062F\u0648\u0627\u062A \u0627\u0644\u0634\u0627\u0634\u0629", invite: "\u0627\u062F\u0639\u064F \u0623\u0635\u062F\u0642\u0627\u0621\u0643 - \u0627\u0643\u0633\u0628 \u0634\u0647\u0631\u064B\u0627 \u0645\u062C\u0627\u0646\u064A\u064B\u0627" },
+  FR: { fiber: "Fibres", sodium: "Sodium", savedMeals: "Repas enregistres", quickAdd: "Ajout rapide", refer: "Parrainez et gagnez 1 mois gratuit", referSub: "Invitez un ami - vous gagnez tous les deux Pro", tagline: "Photographiez. Nibbl compte.", getStarted: "Commencer", haveAccount: "Vous avez un compte ?", signIn: "Se connecter", caloriesLeft: "Calories restantes", caloriesOver: "Calories en trop", protein: "Proteines", carbs: "Glucides", fat: "Lipides", left: "restant", over: "en trop", water: "Eau", glasses: "verres", askCoach: "Demandez au Coach IA", coachSub: "Que manger pour mes macros ?", todaysLog: "Journal du jour", log: "Journal", noMeals: "Aucun repas. Touchez + pour ajouter.", today: "Aujourd'hui", yesterday: "Hier", addFood: "Ajouter", home: "Accueil", progress: "Progres", settings: "Reglages", editGoals: "Modifier objectifs", dailyTarget: "Objectif quotidien", goal: "Objectif", sex: "Sexe", activity: "Activite", pace: "Rythme", language: "Langue", save: "Enregistrer", scanMeal: "Scanner un repas", scanBarcode: "Scanner code-barres", scanLabel: "Scanner etiquette", scanFridge: "Scanner frigo", alignBarcode: "Alignez le code dans le cadre", food: "Repas", barcode: "Code", foodLabel: "Etiquette", fridge: "Frigo", upgrade: "Passer a Nibbl Pro", widgets: "Widgets d'ecran", invite: "Invitez des amis - mois gratuit" },
+  PT: { fiber: "Fibra", sodium: "Sodio", savedMeals: "Refeicoes salvas", quickAdd: "Adicao rapida", refer: "Indique e ganhe 1 mes gratis", referSub: "Convide um amigo - ambos ganham Pro gratis", tagline: "Foto e pronto. Nibbl registra.", getStarted: "Comecar", haveAccount: "Ja tem conta?", signIn: "Entrar", caloriesLeft: "Calorias restantes", caloriesOver: "Calorias a mais", protein: "Proteina", carbs: "Carbos", fat: "Gordura", left: "restante", over: "a mais", water: "Agua", glasses: "copos", askCoach: "Pergunte ao Coach IA", coachSub: "O que comer para bater minhas macros?", todaysLog: "Registro de hoje", log: "Registro", noMeals: "Sem refeicoes. Toque + para adicionar.", today: "Hoje", yesterday: "Ontem", addFood: "Adicionar", home: "Inicio", progress: "Progresso", settings: "Ajustes", editGoals: "Editar metas", dailyTarget: "Meta diaria", goal: "Meta", sex: "Sexo", activity: "Atividade", pace: "Ritmo", language: "Idioma", save: "Salvar", scanMeal: "Escanear refeicao", scanBarcode: "Escanear codigo", scanLabel: "Escanear rotulo", scanFridge: "Escanear geladeira", alignBarcode: "Alinhe o codigo no quadro", food: "Comida", barcode: "Codigo", foodLabel: "Rotulo", fridge: "Geladeira", upgrade: "Assine o Nibbl Pro", widgets: "Widgets de tela", invite: "Convide amigos - ganhe um mes gratis" },
 };
 
 // Detailed Nibbl fox (matches Nibbl.dc.html). Renders just the face, no tile.
@@ -76,16 +77,27 @@ function foodEmoji(name) {
 }
 
 const FOOD_DB = [
-  { name: "Grilled chicken breast", calories: 165, protein: 31, carbs: 0, fat: 4 },
-  { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0 },
-  { name: "Greek yogurt", calories: 100, protein: 17, carbs: 6, fat: 0 },
-  { name: "White rice (1 cup)", calories: 205, protein: 4, carbs: 45, fat: 0 },
-  { name: "Avocado", calories: 240, protein: 3, carbs: 12, fat: 22 },
-  { name: "Egg", calories: 78, protein: 6, carbs: 1, fat: 5 },
-  { name: "Almonds (28g)", calories: 164, protein: 6, carbs: 6, fat: 14 },
-  { name: "Salmon fillet", calories: 280, protein: 39, carbs: 0, fat: 13 },
-  { name: "Oatmeal (1 cup)", calories: 150, protein: 5, carbs: 27, fat: 3 },
-  { name: "Protein shake", calories: 160, protein: 30, carbs: 5, fat: 2 },
+  { name: "Grilled chicken breast", calories: 165, protein: 31, carbs: 0, fat: 4, fiber: 0, sodium: 74 },
+  { name: "Banana", calories: 105, protein: 1, carbs: 27, fat: 0, fiber: 3, sodium: 1 },
+  { name: "Greek yogurt", calories: 100, protein: 17, carbs: 6, fat: 0, fiber: 0, sodium: 56 },
+  { name: "White rice (1 cup)", calories: 205, protein: 4, carbs: 45, fat: 0, fiber: 1, sodium: 2 },
+  { name: "Avocado", calories: 240, protein: 3, carbs: 12, fat: 22, fiber: 10, sodium: 11 },
+  { name: "Egg", calories: 78, protein: 6, carbs: 1, fat: 5, fiber: 0, sodium: 62 },
+  { name: "Almonds (28g)", calories: 164, protein: 6, carbs: 6, fat: 14, fiber: 4, sodium: 0 },
+  { name: "Salmon fillet", calories: 280, protein: 39, carbs: 0, fat: 13, fiber: 0, sodium: 86 },
+  { name: "Oatmeal (1 cup)", calories: 150, protein: 5, carbs: 27, fat: 3, fiber: 4, sodium: 2 },
+  { name: "Protein shake", calories: 160, protein: 30, carbs: 5, fat: 2, fiber: 1, sodium: 150 },
+  { name: "Sweet potato", calories: 112, protein: 2, carbs: 26, fat: 0, fiber: 4, sodium: 72 },
+  { name: "Black beans (1 cup)", calories: 227, protein: 15, carbs: 41, fat: 1, fiber: 15, sodium: 2 },
+  // Restaurant dishes
+  { name: "Chipotle chicken burrito bowl", calories: 630, protein: 45, carbs: 56, fat: 23, fiber: 11, sodium: 1490, restaurant: "Chipotle" },
+  { name: "McDonald's Big Mac", calories: 563, protein: 26, carbs: 45, fat: 33, fiber: 3, sodium: 1010, restaurant: "McDonald's" },
+  { name: "Starbucks grande latte", calories: 190, protein: 13, carbs: 19, fat: 7, fiber: 0, sodium: 170, restaurant: "Starbucks" },
+  { name: "Sweetgreen harvest bowl", calories: 705, protein: 28, carbs: 64, fat: 38, fiber: 9, sodium: 900, restaurant: "Sweetgreen" },
+  { name: "Chick-fil-A grilled nuggets (8)", calories: 130, protein: 25, carbs: 1, fat: 3, fiber: 0, sodium: 440, restaurant: "Chick-fil-A" },
+  { name: "Panera Greek salad", calories: 380, protein: 9, carbs: 17, fat: 32, fiber: 5, sodium: 720, restaurant: "Panera" },
+  { name: "Subway turkey 6\"", calories: 280, protein: 18, carbs: 40, fat: 4, fiber: 3, sodium: 760, restaurant: "Subway" },
+  { name: "Shake Shack ShackBurger", calories: 530, protein: 27, carbs: 41, fat: 30, fiber: 2, sodium: 800, restaurant: "Shake Shack" },
 ];
 
 export default function Nibbl() {
@@ -104,7 +116,7 @@ export default function Nibbl() {
   const goalCal = TARGET[answers.goal] || 2500;
   const [goals, setGoals] = useState(null);
   const target = goals ? goals.calories : goalCal;
-  const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat } : { protein: 263, carbs: 350, fat: 117 };
+  const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat, fiber: goals.fiber, sodium: goals.sodium } : { protein: 263, carbs: 350, fat: 117, fiber: 30, sodium: 2300 };
   const waterGoal = 8;
 
   const [logsByDay, setLogsByDay] = useState({ 0: [] });
@@ -115,7 +127,7 @@ export default function Nibbl() {
   const setWater = (n) => setWaterByDay((m) => ({ ...m, [dayOffset]: Math.max(0, n) }));
 
   const [weights, setWeights] = useState([{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
-  const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat }), { cal: 0, p: 0, c: 0, f: 0 });
+  const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat, fb: a.fb + (m.fiber || 0), na: a.na + (m.sodium || 0) }), { cal: 0, p: 0, c: 0, f: 0, fb: 0, na: 0 });
   const calLeft = target - consumed.cal;
 
   const FREE_LIMIT = 3;
@@ -127,6 +139,13 @@ export default function Nibbl() {
   };
   const updateMeal = (id, m) => setLog((l) => l.map((x) => (x.id === id ? { ...x, ...m } : x)));
   const removeMeal = (id) => setLog((l) => l.filter((x) => x.id !== id));
+
+  const [savedMeals, setSavedMeals] = useState([
+    { name: "Grilled chicken bowl", calories: 520, protein: 42, carbs: 38, fat: 18, fiber: 7, sodium: 640 },
+    { name: "Greek yogurt + berries", calories: 220, protein: 18, carbs: 26, fat: 4, fiber: 5, sodium: 70 },
+  ]);
+  const isSaved = (m) => savedMeals.some((s) => s.name === m.name);
+  const toggleSaved = (m) => setSavedMeals((l) => (l.some((s) => s.name === m.name) ? l.filter((s) => s.name !== m.name) : [{ name: m.name, calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber || 0, sodium: m.sodium || 0 }, ...l]));
 
   const wrap = (children) => <div dir={rtl ? "rtl" : "ltr"} style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>;
 
@@ -176,18 +195,18 @@ export default function Nibbl() {
     <Phone>{wrap(
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.cream, position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} />}
+          {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} />}
           {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} />}
           {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} />}
         </div>
         <TabBar tab={tab} setTab={setTab} t={t} onScan={() => setScanner(true)} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} />
 
         {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
-        {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} />}
+        {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} savedMeals={savedMeals} isSaved={isSaved} onToggleSave={toggleSaved} t={t} />}
         {sheet === "coach" && <CoachSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} />}
         {sheet === "referral" && <ReferralSheet onClose={() => setSheet(null)} />}
         {sheet === "widgets" && <WidgetSheet onClose={() => setSheet(null)} calLeft={calLeft} consumed={consumed} target={target} macroTargets={macroTargets} streak={log.length} t={t} />}
-        {sheet === "goals" && <GoalsSheet onClose={() => setSheet(null)} current={{ calories: target, protein: macroTargets.protein, carbs: macroTargets.carbs, fat: macroTargets.fat }} onSave={(g) => { setGoals(g); setSheet(null); }} t={t} />}
+        {sheet === "goals" && <GoalsSheet onClose={() => setSheet(null)} current={{ calories: target, protein: macroTargets.protein, carbs: macroTargets.carbs, fat: macroTargets.fat, fiber: macroTargets.fiber, sodium: macroTargets.sodium }} onSave={(g) => { setGoals(g); setSheet(null); }} t={t} />}
         {sheet === "lang" && <LangSheet onClose={() => setSheet(null)} lang={lang} setLang={(l) => { setLang(l); setSheet(null); }} title={t.language} />}
         {sheet && sheet.edit && <EditSheet meal={sheet.edit} onClose={() => setSheet(null)} onSave={(m) => { updateMeal(sheet.edit.id, m); setSheet(null); }} onDelete={() => { removeMeal(sheet.edit.id); setSheet(null); }} />}
       </div>
@@ -216,11 +235,12 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
   };
   const analyze = async (b64, media, dataUrl, m) => {
     let p = 12; const tick = setInterval(() => { p = Math.min(p + 9, 92); setAnalyzer((a) => (a ? { ...a, pct: p } : a)); }, 350);
+    const SCHEMA = ' Respond ONLY raw JSON: {"name": string (max 4 words), "calories": number, "protein": number (g), "carbs": number (g), "fat": number (g), "fiber": number (g), "sodium": number (mg)}';
     const prompts = {
-      food: 'Identify this food and estimate nutrition. Respond ONLY raw JSON: {"name": string (max 4 words), "calories": number, "protein": number, "carbs": number, "fat": number}',
-      barcode: 'This is a product barcode/package. Identify the product and per-serving nutrition. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
-      label: 'This is a nutrition facts label. Read the per-serving values. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
-      fridge: 'This is a photo of fridge contents. Suggest ONE simple meal from what you see and give its nutrition. Respond ONLY raw JSON: {"name": string, "calories": number, "protein": number, "carbs": number, "fat": number}',
+      food: 'Identify this food and estimate nutrition.' + SCHEMA,
+      barcode: 'This is a product barcode/package. Identify the product and per-serving nutrition.' + SCHEMA,
+      label: 'This is a nutrition facts label. Read the per-serving values.' + SCHEMA,
+      fridge: 'This is a photo of fridge contents. Suggest ONE simple meal from what you see and give its nutrition.' + SCHEMA,
     };
     try {
       const resp = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: media || "image/jpeg", data: b64 } }, { type: "text", text: prompts[m] }] }] }) });
@@ -230,7 +250,7 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
       clearInterval(tick); setAnalyzer({ img: dataUrl, status: "done", result: r });
     } catch (e) { clearInterval(tick); setAnalyzer({ img: dataUrl, status: "error" }); }
   };
-  const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), img: analyzer.img }); if (ok) onClose(); };
+  const confirm = () => { const r = analyzer.result; const ok = onAddMeal({ name: r.name, calories: Math.round(r.calories), protein: Math.round(r.protein), carbs: Math.round(r.carbs), fat: Math.round(r.fat), fiber: Math.round(r.fiber || 0), sodium: Math.round(r.sodium || 0), img: analyzer.img }); if (ok) onClose(); };
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#15110e", zIndex: 40, display: "flex", flexDirection: "column" }}>
@@ -311,6 +331,8 @@ function GoalsSheet({ onClose, current, onSave, t }) {
       <Row label={t.protein + " (g)"} k="protein" step={5} color={C.protein} />
       <Row label={t.carbs + " (g)"} k="carbs" step={5} color={C.carbs} />
       <Row label={t.fat + " (g)"} k="fat" step={5} color={C.fat} />
+      <Row label={t.fiber + " (g)"} k="fiber" step={1} color={C.fiber} />
+      <Row label={t.sodium + " (mg)"} k="sodium" step={100} color={C.sodium} />
       <button onClick={() => onSave(g)} style={{ width: "100%", marginTop: 20, background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>{t.save}</button>
     </Sheet>
   );
@@ -331,7 +353,7 @@ function LangSheet({ onClose, lang, setLang, title }) {
   );
 }
 
-function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral }) {
+function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoal, pro, dayOffset, setDayOffset, setWater, t, onEdit, onCoach, onUpsell, onReferral, savedMeals, onQuickAdd }) {
   const over = calLeft < 0;
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date();
@@ -367,6 +389,20 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
           <MacroBar label={t.fat} have={consumed.f} goal={macroTargets.fat} color={C.fat} track="#E8F3FD" />
         </div>
       </Card>
+      <Card style={{ padding: 16, marginBottom: 16 }}>
+        <div style={{ fontWeight: 600, fontSize: 13, color: C.ink, marginBottom: 12 }}>{t.fiber} & {t.sodium}</div>
+        <div style={{ display: "flex", gap: 16 }}>
+          {[[t.fiber, consumed.fb, macroTargets.fiber, "g", C.fiber, C.fiberTrack], [t.sodium, consumed.na, macroTargets.sodium, "mg", C.sodium, C.sodiumTrack]].map((row) => {
+            const pct = row[2] > 0 ? Math.min((row[1] / row[2]) * 100, 100) : 0;
+            return (
+              <div key={row[0]} style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}><span style={{ fontWeight: 600, fontSize: 12, color: C.ink }}>{row[0]}</span><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 12, color: C.ink, opacity: .55 }}>{row[1]}<span style={{ opacity: .6 }}>/{row[2]}{row[3]}</span></span></div>
+                <div style={{ height: 7, borderRadius: 9, background: row[5], overflow: "hidden" }}><div style={{ width: pct + "%", height: "100%", borderRadius: 9, background: row[4] }} /></div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
       <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <Card style={{ flex: 1.1, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontWeight: 600, fontSize: 13, color: C.ink }}>{t.water}</span><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 13, color: C.water }}>{water}<span style={{ opacity: .6, fontSize: 11 }}>/{waterGoal}</span></span></div>
@@ -382,6 +418,20 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
         <div style={{ flex: 1 }}><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{t.refer}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .55, marginTop: 2 }}>{t.referSub}</div></div>
         <ChevronRight size={20} color={C.accent} />
       </button>
+      {savedMeals && savedMeals.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: C.ink, marginBottom: 8 }}>{t.quickAdd}</div>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
+            {savedMeals.map((m) => (
+              <button key={m.name} onClick={() => onQuickAdd(m)} style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid " + C.border, borderRadius: 14, padding: "8px 12px", cursor: "pointer", boxShadow: "0 1px 2px rgba(27,42,42,.04)" }}>
+                <span style={{ fontSize: 18 }}>{foodEmoji(m.name)}</span>
+                <span style={{ textAlign: "left" }}><span style={{ display: "block", fontWeight: 600, fontSize: 12, color: C.ink, whiteSpace: "nowrap" }}>{m.name.length > 18 ? m.name.slice(0, 17) + "…" : m.name}</span><span style={{ display: "block", fontSize: 11, color: C.sub }}>{m.calories} cal</span></span>
+                <Plus size={15} color={C.accent} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.ink }}>{dayOffset === 0 ? t.todaysLog : t.log}</span><span style={{ fontWeight: 600, fontSize: 13, color: C.accent }}>See all</span></div>
       {!pro && dayOffset === 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF1E9", border: "1px solid " + C.accent + "33", borderRadius: 16, padding: "12px 14px", marginBottom: 10 }}><span style={{ fontSize: 13, color: C.ink }}>{Math.max(3 - log.length, 0)} free scans left</span><button onClick={onUpsell} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 99, padding: "6px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Pro</button></div>}
       {log.length === 0 && <Card style={{ padding: 24, textAlign: "center", color: C.sub }}>{t.noMeals}</Card>}
@@ -402,15 +452,38 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
   );
 }
 
-function SearchSheet({ onClose, onPick }) {
+function SearchSheet({ onClose, onPick, savedMeals, isSaved, onToggleSave, t }) {
   const [q, setQ] = useState("");
-  const results = FOOD_DB.filter((f) => f.name.toLowerCase().includes(q.toLowerCase()));
+  const [view, setView] = useState("all");
+  const match = (f) => f.name.toLowerCase().includes(q.toLowerCase());
+  const list = (view === "saved" ? savedMeals : FOOD_DB).filter(match);
+  const Item = (f) => (
+    <div key={f.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #F0EADF", background: "#fff" }}>
+      <button onClick={() => onPick(f)} style={{ display: "flex", alignItems: "center", gap: 12, border: "none", background: "transparent", cursor: "pointer", textAlign: "left", flex: 1, minWidth: 0, padding: 0 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 22, flex: "none" }}>{foodEmoji(f.name)}</div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 600, color: C.ink, display: "flex", alignItems: "center", gap: 6 }}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>{f.restaurant && <span style={{ flex: "none", fontSize: 10, fontWeight: 700, color: C.accentDark, background: "#FFEDE4", padding: "2px 6px", borderRadius: 99 }}>{f.restaurant}</span>}</div>
+          <div style={{ fontSize: 12, color: C.sub }}>{f.calories} cal {"·"} {f.protein}p {f.carbs}c {f.fat}f {"·"} {f.fiber || 0}g {t.fiber.toLowerCase()}</div>
+        </div>
+      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "none", marginLeft: 8 }}>
+        <button onClick={() => onToggleSave(f)} title="Save" style={{ border: "none", background: "transparent", cursor: "pointer", display: "grid", placeItems: "center", padding: 0 }}>{isSaved(f) ? <BookmarkCheck size={19} color={C.accent} /> : <Bookmark size={19} color={C.sub} />}</button>
+        <button onClick={() => onPick(f)} style={{ border: "none", background: C.accent, color: "#fff", borderRadius: 99, width: 30, height: 30, display: "grid", placeItems: "center", cursor: "pointer" }}><Plus size={18} /></button>
+      </div>
+    </div>
+  );
   return (
     <Sheet onClose={onClose} title="Search food">
-      <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.grayBg, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}><Search size={18} color={C.sub} /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search foods..." style={{ border: "none", background: "transparent", outline: "none", flex: 1, fontSize: 16, color: C.ink }} /></div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto" }}>
-        {results.map((f) => (<button key={f.name} onClick={() => onPick(f)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #F0EADF", background: "#fff", cursor: "pointer", textAlign: "left" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 22 }}>{foodEmoji(f.name)}</div><div><div style={{ fontWeight: 600, color: C.ink }}>{f.name}</div><div style={{ fontSize: 12, color: C.sub }}>{f.protein}p {f.carbs}c {f.fat}f</div></div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontWeight: 700, color: C.ink }}>{f.calories}</span><Plus size={18} color={C.accent} /></div></button>))}
-        {results.length === 0 && <div style={{ textAlign: "center", color: C.sub, padding: 20 }}>No matches.</div>}
+      <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        {[["all", "All foods"], ["saved", t.savedMeals]].map((s) => (
+          <button key={s[0]} onClick={() => setView(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: view === s[0] ? C.ink : C.grayBg, color: view === s[0] ? "#fff" : C.ink }}>{s[1]}</button>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.grayBg, borderRadius: 14, padding: "12px 14px" }}><Search size={18} color={C.sub} /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search foods..." style={{ border: "none", background: "transparent", outline: "none", flex: 1, fontSize: 16, color: C.ink }} /></div>
+      <div style={{ fontSize: 12, color: C.sub, margin: "8px 2px 12px" }}>{view === "all" ? "20.5M+ foods " + "·" + " incl. restaurant dishes" : savedMeals.length + " saved for quick logging"}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
+        {list.map((f) => Item(f))}
+        {list.length === 0 && <div style={{ textAlign: "center", color: C.sub, padding: 20 }}>{view === "saved" ? "No saved meals yet. Tap the bookmark on any food to save it." : "No matches."}</div>}
       </div>
     </Sheet>
   );
