@@ -103,7 +103,8 @@ function gradeInfo(score) {
     : { letter: "E", label: "Bad", color: "#E0504E" };
   return { ...g, s100: score * 10 };
 }
-const flagColor = (val, hi) => (val >= hi ? "#E0504E" : "#3E9B57");
+// 3-tier traffic light (FSA-style per-serving): green / amber / red
+const flagColor = (val, amber, red) => (val >= red ? "#E0504E" : val >= amber ? "#E0A92E" : "#3E9B57");
 const SCORE_RAMP = ["#E66A5A", "#E8803A", "#E8923A", "#E0A92E", "#E0B72E", "#C9C13A", "#9FC24E", "#7DBE5C", "#5FB87A", "#3E9B57"];
 function ScoreBar({ score }) {
   return <div style={{ display: "flex", gap: 4 }}>{SCORE_RAMP.map((c, i) => (<div key={i} style={{ flex: 1, height: 7, borderRadius: 4, background: i < score ? c : "#E9E4DA" }} />))}</div>;
@@ -483,7 +484,7 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.ink }}>{dayOffset === 0 ? t.todaysLog : t.log}</span><span style={{ fontWeight: 600, fontSize: 13, color: C.accent }}>See all</span></div>
       {!pro && dayOffset === 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFF1E9", border: "1px solid " + C.accent + "33", borderRadius: 16, padding: "12px 14px", marginBottom: 10 }}><span style={{ fontSize: 13, color: C.ink }}>{Math.max(3 - log.length, 0)} free scans left</span><button onClick={onUpsell} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 99, padding: "6px 14px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Pro</button></div>}
       {log.length === 0 && <Card style={{ padding: 24, textAlign: "center", color: C.sub }}>{t.noMeals}</Card>}
-      {log.map((m) => { const g = gradeInfo(scoreFood(m).score); return (
+      {log.map((m) => { const sc = scoreFood(m).score; const g = gradeInfo(sc); return (
         <div key={m.id} onClick={() => onInsight(m)} style={{ display: "flex", alignItems: "center", gap: 13, background: "#fff", borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)", cursor: "pointer" }}>
           {m.img ? <img src={m.img} alt="" style={{ width: 50, height: 50, borderRadius: 14, objectFit: "cover", flex: "none" }} /> : <div style={{ width: 50, height: 50, borderRadius: 14, background: "linear-gradient(135deg,#FFE8D6,#FFD3B0)", display: "grid", placeItems: "center", fontSize: 26, flex: "none" }}>{foodEmoji(m.name)}</div>}
           <div style={{ flex: 1 }}>
@@ -493,7 +494,7 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
               <button onClick={(e) => { e.stopPropagation(); onEdit(m); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.ink, opacity: .45, fontSize: 11, display: "flex", alignItems: "center", gap: 4, padding: 0 }}><Pencil size={11} /> {m.time}</button>
             </div>
           </div>
-          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 16, color: C.ink }}>{m.calories}</div><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 11, color: g.color }}>{scoreFood(m).score}/10</span></div>
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 16, color: C.ink }}>{m.calories}</div><span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: DISP, fontWeight: 700, fontSize: 11, color: g.color, background: g.color + "1A", padding: "2px 7px", borderRadius: 99 }}><span style={{ width: 6, height: 6, borderRadius: 99, background: g.color }} />{sc}/10</span></div>
         </div>
       ); })}
     </div>
@@ -621,7 +622,7 @@ function InsightSheet({ meal, onClose }) {
           <div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>{g.label}</div><div style={{ fontWeight: 700, fontSize: 14, color: g.color }}>{g.s100}/100</div></div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-around", marginTop: 14, paddingTop: 14, borderTop: "1px solid #F0EADF" }}>
-          {[["Fat", flagColor(meal.fat || 0, 18)], ["Sugars", flagColor(sugar, 15)], ["Salt", flagColor(meal.sodium || 0, 600)]].map((r) => (
+          {[["Fat", flagColor(meal.fat || 0, 3, 17.5)], ["Sugars", flagColor(sugar, 5, 22.5)], ["Salt", flagColor(meal.sodium || 0, 120, 600)]].map((r) => (
             <div key={r[0]} style={{ textAlign: "center" }}><div style={{ width: 9, height: 9, borderRadius: 99, background: r[1], margin: "0 auto 6px" }} /><div style={{ fontSize: 12, color: C.sub }}>{r[0]}</div></div>
           ))}
         </div>
