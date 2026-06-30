@@ -4,11 +4,21 @@ import { Home, BarChart3, Settings, Plus, Flame, Dumbbell, Utensils, Droplet, Sc
 const C = {
   ink: "#1B2A2A", cream: "#FBF7F0", accent: "#FF7A4D", accentLight: "#FF8A5B", accentDark: "#E85F30",
   protein: "#F2545B", carbs: "#F2A03D", fat: "#4DA8F0", water: "#4DA8F0",
-  flame: "#FF7A3D", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF",
+  flame: "#FF7A3D", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF", card: "#fff", warm: "#FFF1E9",
   pTrack: "#FDECEC", cTrack: "#FCF1E2", fTrack: "#E8F3FD",
   pInk: "#C23B42", cInk: "#C57A1E", fInk: "#2C7EC0", ringTrack: "#F0E8DA",
   fiber: "#5FB87A", fiberTrack: "#E6F4EA", sodium: "#8E7CE6", sodiumTrack: "#EDE9FB",
 };
+// Tokens that flip between light/dark; brand + macro colors stay constant.
+const THEMES = {
+  light: { ink: "#1B2A2A", cream: "#FBF7F0", grayBg: "#F4F0E8", sub: "#B7AE9E", border: "#F0EADF", card: "#fff", warm: "#FFF1E9", ringTrack: "#F0E8DA", pTrack: "#FDECEC", cTrack: "#FCF1E2", fTrack: "#E8F3FD", fiberTrack: "#E6F4EA", sodiumTrack: "#EDE9FB" },
+  dark: { ink: "#ECE6DA", cream: "#15181b", grayBg: "#262d31", sub: "#8a949a", border: "#2c3338", card: "#1d2327", warm: "#2a2017", ringTrack: "#2c3338", pTrack: "#3a2a2e", cTrack: "#3a3127", fTrack: "#26313a", fiberTrack: "#22332a", sodiumTrack: "#2c2a3a" },
+};
+const applyTheme = (mode) => Object.assign(C, THEMES[mode] || THEMES.light);
+const INK = "#1B2A2A"; // fixed dark accent for surfaces that stay dark in both themes
+
+const LS_KEY = "nibbl_state_v1";
+const SAVED = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; } })();
 const BODY = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const DISP = "Poppins, system-ui, sans-serif";
 
@@ -133,7 +143,7 @@ const mealForHour = (h) => { h = h == null ? new Date().getHours() : h; return h
 function MealRow({ m, onInsight, onEdit }) {
   const sc = scoreFood(m).score; const g = gradeInfo(sc);
   return (
-    <div onClick={() => onInsight(m)} style={{ display: "flex", alignItems: "center", gap: 13, background: "#fff", borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)", cursor: "pointer" }}>
+    <div onClick={() => onInsight(m)} style={{ display: "flex", alignItems: "center", gap: 13, background: C.card, borderRadius: 20, padding: 12, marginBottom: 10, boxShadow: "0 1px 2px rgba(27,42,42,.04),0 12px 24px -22px rgba(27,42,42,.3)", cursor: "pointer" }}>
       {m.img ? <img src={m.img} alt="" style={{ width: 50, height: 50, borderRadius: 14, objectFit: "cover", flex: "none" }} /> : <div style={{ width: 50, height: 50, borderRadius: 14, background: "linear-gradient(135deg,#FFE8D6,#FFD3B0)", display: "grid", placeItems: "center", fontSize: 26, flex: "none" }}>{foodEmoji(m.name)}</div>}
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>{m.name}</div>
@@ -180,29 +190,31 @@ const FOOD_DB = [
 ];
 
 export default function Nibbl() {
-  const [screen, setScreen] = useState("splash");
+  const [screen, setScreen] = useState(SAVED.screen || "splash");
   const [obIndex, setObIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState(SAVED.answers || {});
   const [tab, setTab] = useState("home");
-  const [pro, setPro] = useState(false);
+  const [pro, setPro] = useState(SAVED.pro || false);
   const [sheet, setSheet] = useState(null);
   const [scanner, setScanner] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
-  const [lang, setLang] = useState("EN");
-  const [units, setUnits] = useState("metric");
+  const [lang, setLang] = useState(SAVED.lang || "EN");
+  const [units, setUnits] = useState(SAVED.units || "metric");
+  const [theme, setTheme] = useState(SAVED.theme || "light");
+  applyTheme(theme);
   const t = T[lang];
   const rtl = lang === "AR";
 
   const auto = computeTargets(answers, units);
-  const [goals, setGoals] = useState(null);
+  const [goals, setGoals] = useState(SAVED.goals || null);
   const target = goals ? goals.calories : auto.calories;
   const macroTargets = goals ? { protein: goals.protein, carbs: goals.carbs, fat: goals.fat, fiber: goals.fiber, sodium: goals.sodium } : { protein: auto.protein, carbs: auto.carbs, fat: auto.fat, fiber: auto.fiber, sodium: auto.sodium };
   const goalKg = answers.goalWeight ? toKg(answers.goalWeight, units) : null;
   const waterGoal = 8;
 
-  const [logsByDay, setLogsByDay] = useState({ 0: [] });
-  const [waterByDay, setWaterByDay] = useState({ 0: 0 });
-  const [exByDay, setExByDay] = useState({ 0: [] });
+  const [logsByDay, setLogsByDay] = useState(SAVED.logsByDay || { 0: [] });
+  const [waterByDay, setWaterByDay] = useState(SAVED.waterByDay || { 0: 0 });
+  const [exByDay, setExByDay] = useState(SAVED.exByDay || { 0: [] });
   const log = logsByDay[dayOffset] || [];
   const water = waterByDay[dayOffset] || 0;
   const exercises = exByDay[dayOffset] || [];
@@ -210,7 +222,7 @@ export default function Nibbl() {
   const setWater = (n) => setWaterByDay((m) => ({ ...m, [dayOffset]: Math.max(0, n) }));
   const addExercise = (e) => setExByDay((m) => ({ ...m, [dayOffset]: [{ ...e, id: Date.now() }, ...(m[dayOffset] || [])] }));
 
-  const [weights, setWeights] = useState([{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
+  const [weights, setWeights] = useState(SAVED.weights || [{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
   const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat, fb: a.fb + (m.fiber || 0), na: a.na + (m.sodium || 0) }), { cal: 0, p: 0, c: 0, f: 0, fb: 0, na: 0 });
   const burned = exercises.reduce((a, e) => a + e.calories, 0);
   const calLeft = target + burned - consumed.cal;
@@ -220,7 +232,10 @@ export default function Nibbl() {
   const sumT = dayTotals.reduce((a, d) => ({ cal: a.cal + d.cal, p: a.p + d.p, c: a.c + d.c, f: a.f + d.f }), { cal: 0, p: 0, c: 0, f: 0 });
   const weekly = { days: dayTotals.length, avgCal: Math.round(sumT.cal / nDays), pPct: Math.round((sumT.p / nDays / macroTargets.protein) * 100), cPct: Math.round((sumT.c / nDays / macroTargets.carbs) * 100), fPct: Math.round((sumT.f / nDays / macroTargets.fat) * 100) };
 
-  const [recents, setRecents] = useState([]);
+  const [recents, setRecents] = useState(SAVED.recents || []);
+  React.useEffect(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ screen, answers, goals, units, lang, theme, pro, logsByDay, waterByDay, exByDay, savedMeals, recents, weights })); } catch (e) {}
+  });
   const FREE_LIMIT = 3;
   const addMeal = (m) => {
     const totalToday = (logsByDay[0] || []).length;
@@ -244,7 +259,7 @@ export default function Nibbl() {
     setScreen("paywall");
   };
 
-  const [savedMeals, setSavedMeals] = useState([
+  const [savedMeals, setSavedMeals] = useState(SAVED.savedMeals || [
     { name: "Grilled chicken bowl", calories: 520, protein: 42, carbs: 38, fat: 18, fiber: 7, sodium: 640, sugar: 6, ingredients: ["Chicken breast", "Brown rice", "Avocado", "Cherry tomato", "Olive oil"] },
     { name: "Greek yogurt + berries", calories: 220, protein: 18, carbs: 26, fat: 4, fiber: 5, sodium: 70, sugar: 18, ingredients: ["Greek yogurt", "Blueberries", "Strawberries", "Honey"] },
   ]);
@@ -283,14 +298,14 @@ export default function Nibbl() {
       <Phone><div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 22px", background: C.cream, overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
           <button onClick={() => (obIndex > 0 ? setObIndex(obIndex - 1) : setScreen("splash"))} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 4 }}><ChevronLeft size={26} color={C.ink} /></button>
-          <div style={{ flex: 1, height: 8, background: "#EFE6D8", borderRadius: 99 }}><div style={{ width: pct + "%", height: "100%", background: C.accent, borderRadius: 99, transition: "width .3s" }} /></div>
+          <div style={{ flex: 1, height: 8, background: C.border, borderRadius: 99 }}><div style={{ width: pct + "%", height: "100%", background: C.accent, borderRadius: 99, transition: "width .3s" }} /></div>
         </div>
         <NibblMark size={34} />
         <h2 style={{ fontFamily: DISP, fontWeight: 800, fontSize: 28, color: C.ink, lineHeight: 1.15, margin: "14px 0 28px" }}>{step.q}</h2>
         {step.type === "stats"
           ? <StatsStep answers={answers} setAnswers={setAnswers} units={units} setUnits={setUnits} onContinue={next} />
           : <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {step.opts.map((o) => { const sel = answers[step.key] === o; return <button key={o} onClick={() => pick(o)} style={{ textAlign: "left", padding: "20px 22px", borderRadius: 20, border: "2px solid " + (sel ? C.accent : "transparent"), background: "#fff", fontSize: 18, fontWeight: 600, color: C.ink, fontFamily: DISP, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,.04)" }}>{o}</button>; })}
+              {step.opts.map((o) => { const sel = answers[step.key] === o; return <button key={o} onClick={() => pick(o)} style={{ textAlign: "left", padding: "20px 22px", borderRadius: 20, border: "2px solid " + (sel ? C.accent : "transparent"), background: C.card, fontSize: 18, fontWeight: 600, color: C.ink, fontFamily: DISP, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,.04)" }}>{o}</button>; })}
             </div>}
       </div></Phone>
     );
@@ -304,7 +319,7 @@ export default function Nibbl() {
         <div style={{ flex: 1, overflowY: "auto" }}>
           {tab === "home" && <HomeTab target={target} calLeft={calLeft} consumed={consumed} macroTargets={macroTargets} log={log} water={water} waterGoal={waterGoal} pro={pro} dayOffset={dayOffset} setDayOffset={setDayOffset} setWater={setWater} t={t} onEdit={(m) => setSheet({ edit: m })} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} onUpsell={() => setScreen("paywall")} onReferral={() => setSheet("referral")} savedMeals={savedMeals} onQuickAdd={(m) => addMeal(m)} onInsight={(m) => setSheet({ insight: m })} burned={burned} exercises={exercises} onAddExercise={() => setSheet("exercise")} />}
           {tab === "progress" && <ProgressTab weights={weights} setWeights={setWeights} totalCal={consumed.cal} log={log} t={t} units={units} goalKg={goalKg} weekly={weekly} onRecap={() => (pro ? setSheet("recap") : setScreen("paywall"))} />}
-          {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} units={units} setUnits={setUnits} />}
+          {tab === "settings" && <SettingsTab answers={answers} target={target} macroTargets={macroTargets} pro={pro} lang={lang} t={t} onUpsell={() => setScreen("paywall")} onWidgets={() => setSheet("widgets")} onReferral={() => setSheet("referral")} onEditGoals={() => setSheet("goals")} onLang={() => setSheet("lang")} units={units} setUnits={setUnits} theme={theme} setTheme={setTheme} />}
         </div>
         <TabBar tab={tab} setTab={setTab} t={t} onScan={() => setScanner(true)} onCoach={() => (pro ? setSheet("coach") : setScreen("paywall"))} />
 
@@ -417,14 +432,14 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
               </div>
             ); })()}
             {analyzer.status === "done" && <div style={{ display: "flex", gap: 10, marginTop: 14 }}><button onClick={confirm} style={{ flex: 1, background: C.accent, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Add to log</button><button onClick={() => setAnalyzer(null)} style={{ background: C.grayBg, color: C.ink, border: "none", borderRadius: 12, padding: "13px 16px", fontWeight: 600, cursor: "pointer" }}>Retry</button></div>}
-            {analyzer.status === "error" && <button onClick={() => setAnalyzer(null)} style={{ width: "100%", marginTop: 14, background: C.ink, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Back</button>}
+            {analyzer.status === "error" && <button onClick={() => setAnalyzer(null)} style={{ width: "100%", marginTop: 14, background: INK, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontWeight: 700, cursor: "pointer" }}>Back</button>}
           </div>
         )}
       </div>
       {!analyzer && (
         <div style={{ position: "relative", zIndex: 2, display: "flex", gap: 6, padding: "14px 16px 30px", justifyContent: "center" }}>
           {SCAN_MODES.map((m) => { const sel = mode === m.key; return (
-            <button key={m.key} onClick={() => setMode(m.key)} style={{ border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, padding: "8px 15px", borderRadius: 12, color: sel ? C.ink : "rgba(255,255,255,.65)", background: sel ? C.accent : "rgba(255,255,255,.08)" }}>{t[m.labelKey]}</button>
+            <button key={m.key} onClick={() => setMode(m.key)} style={{ border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, padding: "8px 15px", borderRadius: 12, color: sel ? INK : "rgba(255,255,255,.65)", background: sel ? C.accent : "rgba(255,255,255,.08)" }}>{t[m.labelKey]}</button>
           ); })}
         </div>
       )}
@@ -437,7 +452,7 @@ function Scanner({ onClose, onAddMeal, onSearch, t }) {
 function GoalsSheet({ onClose, current, onSave, t }) {
   const [g, setG] = useState(current);
   const Row = ({ label, k, step, color }) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid #F0EADF" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderTop: "1px solid " + C.border }}>
       <span style={{ color: C.ink, fontWeight: 600 }}><b style={{ color }}>{"\u25CF"}</b> {label}</span>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => setG({ ...g, [k]: Math.max(0, g[k] - step) })} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button>
@@ -466,7 +481,7 @@ function StatsStep({ answers, setAnswers, units, setUnits, onContinue }) {
   const field = (label, k, unit, ph) => (
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 12, color: C.sub, fontWeight: 600, marginBottom: 6 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #EFE6D8", borderRadius: 14, padding: "12px 14px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, background: C.card, border: "1.5px solid " + C.border, borderRadius: 14, padding: "12px 14px" }}>
         <input type="number" inputMode="numeric" value={answers[k] ?? ""} onChange={(e) => set(k, e.target.value)} placeholder={ph} style={{ border: "none", outline: "none", width: "100%", minWidth: 0, fontSize: 18, fontWeight: 700, color: C.ink, fontFamily: DISP, background: "transparent" }} />
         {unit && <span style={{ color: C.sub, fontWeight: 600, fontSize: 13 }}>{unit}</span>}
       </div>
@@ -476,7 +491,7 @@ function StatsStep({ answers, setAnswers, units, setUnits, onContinue }) {
     <div>
       <div style={{ display: "flex", gap: 6, marginBottom: 18, background: C.grayBg, borderRadius: 14, padding: 4 }}>
         {[["metric", "Metric"], ["imperial", "Imperial"]].map((s) => (
-          <button key={s[0]} onClick={() => setUnits(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "10px 0", borderRadius: 11, fontWeight: 700, fontSize: 14, background: units === s[0] ? "#fff" : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 2px 6px rgba(0,0,0,.06)" : "none" }}>{s[1]}</button>
+          <button key={s[0]} onClick={() => setUnits(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "10px 0", borderRadius: 11, fontWeight: 700, fontSize: 14, background: units === s[0] ? C.card : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 2px 6px rgba(0,0,0,.06)" : "none" }}>{s[1]}</button>
         ))}
       </div>
       <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
@@ -497,7 +512,7 @@ function LangSheet({ onClose, lang, setLang, title }) {
     <Sheet onClose={onClose} title={title}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {LANGS.map((l) => { const sel = lang === l.code; return (
-          <button key={l.code} onClick={() => setLang(l.code)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 14, border: "2px solid " + (sel ? C.accent : "#F0EADF"), background: "#fff", cursor: "pointer" }}>
+          <button key={l.code} onClick={() => setLang(l.code)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 14, border: "2px solid " + (sel ? C.accent : C.border), background: C.card, cursor: "pointer" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 12, fontWeight: 600, color: C.ink }}><span style={{ fontSize: 24 }}>{l.flag}</span> {l.name}</span>
             {sel && <Check size={20} color={C.accent} />}
           </button>
@@ -524,9 +539,9 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
           <div style={{ fontWeight: 500, fontSize: 13, color: C.ink, opacity: .5 }}>{greeting}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.ink }}>{dayLabel === t.today ? "Hey there" : dayLabel}</span>{pro && <span style={{ background: C.ink, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>PRO</span>}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.ink }}>{dayLabel === t.today ? "Hey there" : dayLabel}</span>{pro && <span style={{ background: INK, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>PRO</span>}</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid " + C.border, borderRadius: 999, padding: "7px 12px", boxShadow: "0 4px 12px -6px rgba(27,42,42,.15)" }}><Flame size={16} color={C.accent} fill={C.accent} /><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{log.length}</span></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: C.card, border: "1px solid " + C.border, borderRadius: 999, padding: "7px 12px", boxShadow: "0 4px 12px -6px rgba(27,42,42,.15)" }}><Flame size={16} color={C.accent} fill={C.accent} /><span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{log.length}</span></div>
       </div>
       <div style={{ display: "flex", gap: 7, marginBottom: 20 }}>
         {days.map((d, i) => { const active = i === selIdx; const future = i > todayIdx; return (
@@ -538,9 +553,9 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
       <Card style={{ padding: 20, display: "flex", alignItems: "center", gap: 18, marginBottom: 14 }}>
         <GradientRing pct={Math.min(consumed.cal / (target + (burned || 0)), 1)} value={Math.abs(calLeft)} label={over ? t.caloriesOver : t.caloriesLeft} over={over} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 13 }}>
-          <MacroBar label={t.protein} have={consumed.p} goal={macroTargets.protein} color={C.protein} track="#FDECEC" />
-          <MacroBar label={t.carbs} have={consumed.c} goal={macroTargets.carbs} color={C.carbs} track="#FCF1E2" />
-          <MacroBar label={t.fat} have={consumed.f} goal={macroTargets.fat} color={C.fat} track="#E8F3FD" />
+          <MacroBar label={t.protein} have={consumed.p} goal={macroTargets.protein} color={C.protein} track={C.pTrack} />
+          <MacroBar label={t.carbs} have={consumed.c} goal={macroTargets.carbs} color={C.carbs} track={C.cTrack} />
+          <MacroBar label={t.fat} have={consumed.f} goal={macroTargets.fat} color={C.fat} track={C.fTrack} />
         </div>
       </Card>
       <Card style={{ padding: 16, marginBottom: 16 }}>
@@ -574,8 +589,8 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
         </div>
         {exercises && exercises.length > 0 && <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>{exercises.map((e) => (<span key={e.id} style={{ fontSize: 12, fontWeight: 600, color: C.ink, background: C.grayBg, borderRadius: 99, padding: "5px 10px" }}>{e.name} {"·"} {e.calories} cal</span>))}</div>}
       </Card>
-      <button onClick={onReferral} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 13, background: "linear-gradient(135deg,#FFF1E9,#FFE3D3)", borderRadius: 20, padding: 14, marginBottom: 16 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", display: "grid", placeItems: "center", flex: "none", boxShadow: "0 4px 10px -4px rgba(232,95,48,.4)" }}><Gift size={22} color={C.accentDark} /></div>
+      <button onClick={onReferral} style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 13, background: C.warm, borderRadius: 20, padding: 14, marginBottom: 16 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 13, background: C.card, display: "grid", placeItems: "center", flex: "none", boxShadow: "0 4px 10px -4px rgba(232,95,48,.4)" }}><Gift size={22} color={C.accentDark} /></div>
         <div style={{ flex: 1 }}><div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 14, color: C.ink }}>{t.refer}</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .55, marginTop: 2 }}>{t.referSub}</div></div>
         <ChevronRight size={20} color={C.accent} />
       </button>
@@ -584,7 +599,7 @@ function HomeTab({ target, calLeft, consumed, macroTargets, log, water, waterGoa
           <div style={{ fontWeight: 600, fontSize: 13, color: C.ink, marginBottom: 8 }}>{t.quickAdd}</div>
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
             {savedMeals.map((m) => (
-              <button key={m.name} onClick={() => onQuickAdd(m)} style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid " + C.border, borderRadius: 14, padding: "8px 12px", cursor: "pointer", boxShadow: "0 1px 2px rgba(27,42,42,.04)" }}>
+              <button key={m.name} onClick={() => onQuickAdd(m)} style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, background: C.card, border: "1px solid " + C.border, borderRadius: 14, padding: "8px 12px", cursor: "pointer", boxShadow: "0 1px 2px rgba(27,42,42,.04)" }}>
                 <span style={{ fontSize: 18 }}>{foodEmoji(m.name)}</span>
                 <span style={{ textAlign: "left" }}><span style={{ display: "block", fontWeight: 600, fontSize: 12, color: C.ink, whiteSpace: "nowrap" }}>{m.name.length > 18 ? m.name.slice(0, 17) + "…" : m.name}</span><span style={{ display: "block", fontSize: 11, color: C.sub }}>{m.calories} cal</span></span>
                 <Plus size={15} color={C.accent} />
@@ -613,7 +628,7 @@ function SearchSheet({ onClose, onPick, savedMeals, isSaved, onToggleSave, t, re
   const source = view === "saved" ? savedMeals : view === "recent" ? (recents || []) : FOOD_DB;
   const list = source.filter(match);
   const Item = (f) => (
-    <div key={f.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #F0EADF", background: "#fff" }}>
+    <div key={f.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid " + C.border, background: C.card }}>
       <button onClick={() => onPick(f)} style={{ display: "flex", alignItems: "center", gap: 12, border: "none", background: "transparent", cursor: "pointer", textAlign: "left", flex: 1, minWidth: 0, padding: 0 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 22, flex: "none" }}>{foodEmoji(f.name)}</div>
         <div style={{ minWidth: 0 }}>
@@ -631,7 +646,7 @@ function SearchSheet({ onClose, onPick, savedMeals, isSaved, onToggleSave, t, re
     <Sheet onClose={onClose} title="Search food">
       <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
         {[["all", "All"], ["recent", "Recent"], ["saved", t.savedMeals]].map((s) => (
-          <button key={s[0]} onClick={() => setView(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: view === s[0] ? C.ink : C.grayBg, color: view === s[0] ? "#fff" : C.ink }}>{s[1]}</button>
+          <button key={s[0]} onClick={() => setView(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: view === s[0] ? INK : C.grayBg, color: view === s[0] ? "#fff" : C.ink }}>{s[1]}</button>
         ))}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.grayBg, borderRadius: 14, padding: "12px 14px" }}><Search size={18} color={C.sub} /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search foods..." style={{ border: "none", background: "transparent", outline: "none", flex: 1, fontSize: 16, color: C.ink }} /></div>
@@ -652,7 +667,7 @@ function EditSheet({ meal, onClose, onSave, onDelete }) {
   return (
     <Sheet onClose={onClose} title="Edit entry">
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}><div style={{ width: 44, height: 44, borderRadius: 11, background: "#FFF1E9", display: "grid", placeItems: "center", fontSize: 24 }}>{foodEmoji(meal.name)}</div><div style={{ fontWeight: 700, fontSize: 18, color: C.ink }}>{meal.name}</div></div>
-      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>{MEAL_ORDER.map((mt) => (<button key={mt} onClick={() => setMealType(mt)} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 11, fontWeight: 700, fontSize: 12, background: mealType === mt ? C.ink : C.grayBg, color: mealType === mt ? "#fff" : C.sub }}>{mt}</button>))}</div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>{MEAL_ORDER.map((mt) => (<button key={mt} onClick={() => setMealType(mt)} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 11, fontWeight: 700, fontSize: 12, background: mealType === mt ? INK : C.grayBg, color: mealType === mt ? "#fff" : C.sub }}>{mt}</button>))}</div>
       <div style={{ color: C.sub, fontSize: 14, margin: "0 0 18px" }}>Adjust portion size</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginBottom: 18 }}>
         <button onClick={() => setMult(Math.max(0.25, +(mult - 0.25).toFixed(2)))} style={{ width: 44, height: 44, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={20} color={C.ink} /></button>
@@ -677,11 +692,11 @@ function RecipeSheet({ onClose, onSave }) {
   const save = () => onSave({ name: name.trim(), calories: per(sum.calories), protein: per(sum.protein), carbs: per(sum.carbs), fat: per(sum.fat), fiber: per(sum.fiber), sodium: per(sum.sodium), sugar: per(sum.sugar), ingredients: items.map((m) => m.name), isRecipe: true });
   return (
     <Sheet onClose={onClose} title="New recipe">
-      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Recipe name" style={{ width: "100%", border: "1.5px solid #EFE6D8", borderRadius: 14, padding: "13px 14px", fontSize: 16, fontWeight: 600, color: C.ink, outline: "none", marginBottom: 12, boxSizing: "border-box" }} />
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Recipe name" style={{ width: "100%", border: "1.5px solid " + C.border, borderRadius: 14, padding: "13px 14px", fontSize: 16, fontWeight: 600, color: C.ink, outline: "none", marginBottom: 12, boxSizing: "border-box" }} />
       <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.grayBg, borderRadius: 14, padding: "11px 14px", marginBottom: 8 }}><Search size={18} color={C.sub} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Add ingredient..." style={{ border: "none", background: "transparent", outline: "none", flex: 1, fontSize: 15, color: C.ink }} /></div>
-      {results.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>{results.map((f) => (<button key={f.name} onClick={() => { setItems((l) => [...l, f]); setQ(""); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #F0EADF", background: "#fff", borderRadius: 10, padding: "9px 12px", cursor: "pointer", textAlign: "left" }}><span style={{ fontWeight: 600, color: C.ink, fontSize: 14 }}>{foodEmoji(f.name)} {f.name}</span><Plus size={16} color={C.accent} /></button>))}</div>}
+      {results.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>{results.map((f) => (<button key={f.name} onClick={() => { setItems((l) => [...l, f]); setQ(""); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid " + C.border, background: C.card, borderRadius: 10, padding: "9px 12px", cursor: "pointer", textAlign: "left" }}><span style={{ fontWeight: 600, color: C.ink, fontSize: 14 }}>{foodEmoji(f.name)} {f.name}</span><Plus size={16} color={C.accent} /></button>))}</div>}
       {items.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>{items.map((m, i) => (<div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 4px" }}><span style={{ color: C.ink, fontSize: 14 }}>{foodEmoji(m.name)} {m.name} <span style={{ color: C.sub, fontSize: 12 }}>{"·"} {m.calories} cal</span></span><button onClick={() => setItems((l) => l.filter((_, j) => j !== i))} style={{ border: "none", background: "transparent", cursor: "pointer", color: C.sub, display: "grid", placeItems: "center" }}><X size={16} /></button></div>))}</div>}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderTop: "1px solid #F0EADF", borderBottom: "1px solid #F0EADF", marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderTop: "1px solid " + C.border, borderBottom: "1px solid " + C.border, marginBottom: 14 }}>
         <span style={{ color: C.ink, fontWeight: 600 }}>Servings</span>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}><button onClick={() => setServings((s) => Math.max(1, s - 1))} style={{ width: 34, height: 34, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={16} color={C.ink} /></button><span style={{ minWidth: 28, textAlign: "center", fontWeight: 800, fontSize: 17, color: C.ink }}>{servings}</span><button onClick={() => setServings((s) => s + 1)} style={{ width: 34, height: 34, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={16} color="#fff" /></button></div>
       </div>
@@ -699,7 +714,7 @@ function ExerciseSheet({ onClose, onAdd }) {
   const cal = Math.round(EX_PRESETS[sel][2] * min);
   return (
     <Sheet onClose={onClose} title="Log exercise">
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>{EX_PRESETS.map((p, i) => (<button key={p[0]} onClick={() => setSel(i)} style={{ border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 14, fontWeight: 700, fontSize: 14, background: sel === i ? C.ink : C.grayBg, color: sel === i ? "#fff" : C.ink, display: "flex", alignItems: "center", gap: 6 }}>{p[1]} {p[0]}</button>))}</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>{EX_PRESETS.map((p, i) => (<button key={p[0]} onClick={() => setSel(i)} style={{ border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 14, fontWeight: 700, fontSize: 14, background: sel === i ? INK : C.grayBg, color: sel === i ? "#fff" : C.ink, display: "flex", alignItems: "center", gap: 6 }}>{p[1]} {p[0]}</button>))}</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <span style={{ color: C.ink, fontWeight: 600 }}>Minutes</span>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}><button onClick={() => setMin((m) => Math.max(5, m - 5))} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.grayBg, cursor: "pointer", display: "grid", placeItems: "center" }}><Minus size={18} color={C.ink} /></button><span style={{ minWidth: 50, textAlign: "center", fontWeight: 800, fontSize: 20, color: C.ink, fontFamily: DISP }}>{min}</span><button onClick={() => setMin((m) => m + 5)} style={{ width: 36, height: 36, borderRadius: 99, border: "none", background: C.accent, cursor: "pointer", display: "grid", placeItems: "center" }}><Plus size={18} color="#fff" /></button></div>
@@ -746,7 +761,7 @@ function CoachSheet({ onClose, consumed, target, macroTargets }) {
   return (
     <Sheet onClose={onClose} title="AI Coach">
       <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 300, overflowY: "auto", marginBottom: 12 }}>{msgs.map((m, i) => (<div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "82%", background: m.role === "user" ? C.accent : C.grayBg, color: m.role === "user" ? "#fff" : C.ink, padding: "10px 14px", borderRadius: 16, fontSize: 14, lineHeight: 1.4 }}>{m.text}</div>))}{loading && <div style={{ alignSelf: "flex-start", color: C.sub, fontSize: 14, padding: "4px 8px" }}>Coach is typing...</div>}</div>
-      <div style={{ display: "flex", gap: 8 }}><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask your coach..." style={{ flex: 1, border: "1px solid #F0EADF", borderRadius: 14, padding: "12px 14px", outline: "none", fontSize: 15 }} /><button onClick={send} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Send</button></div>
+      <div style={{ display: "flex", gap: 8 }}><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask your coach..." style={{ flex: 1, border: "1px solid " + C.border, borderRadius: 14, padding: "12px 14px", outline: "none", fontSize: 15 }} /><button onClick={send} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Send</button></div>
       <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 10 }}>Not medical advice.</div>
     </Sheet>
   );
@@ -758,7 +773,7 @@ function ReferralSheet({ onClose }) {
     <Sheet onClose={onClose} title="Invite friends">
       <div style={{ textAlign: "center", padding: "8px 0 18px" }}><div style={{ display: "inline-grid", placeItems: "center", width: 64, height: 64, borderRadius: 20, background: "#FFF1E9", marginBottom: 12 }}><Gift size={30} color={C.accent} /></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 20, color: C.ink }}>Refer & get 1 month free</div><div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>Share your code. When a friend subscribes, you both get 1 month of Nibbl Pro free.</div></div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "2px dashed " + C.accent, borderRadius: 14, padding: "14px 18px", marginBottom: 14 }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink, letterSpacing: 1 }}>NIBBL-FOX42</span><button onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontWeight: 700, cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button></div>
-      <button onClick={onClose} style={{ width: "100%", background: C.ink, color: "#fff", border: "none", borderRadius: 14, padding: 14, fontWeight: 700, cursor: "pointer" }}>Share invite</button>
+      <button onClick={onClose} style={{ width: "100%", background: INK, color: "#fff", border: "none", borderRadius: 14, padding: 14, fontWeight: 700, cursor: "pointer" }}>Share invite</button>
     </Sheet>
   );
 }
@@ -794,7 +809,7 @@ function InsightSheet({ meal, onClose }) {
           <div style={{ width: 56, height: 56, borderRadius: 99, border: "4px solid " + g.color, display: "grid", placeItems: "center", flex: "none" }}><span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 22, color: g.color }}>{g.letter}</span></div>
           <div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>{g.label}</div><div style={{ fontWeight: 700, fontSize: 14, color: g.color }}>{g.s100}/100</div></div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-around", marginTop: 14, paddingTop: 14, borderTop: "1px solid #F0EADF" }}>
+        <div style={{ display: "flex", justifyContent: "space-around", marginTop: 14, paddingTop: 14, borderTop: "1px solid " + C.border }}>
           {[["Fat", flagColor(meal.fat || 0, 3, 17.5)], ["Sugars", flagColor(sugar, 5, 22.5)], ["Salt", flagColor(meal.sodium || 0, 120, 600)]].map((r) => (
             <div key={r[0]} style={{ textAlign: "center" }}><div style={{ width: 9, height: 9, borderRadius: 99, background: r[1], margin: "0 auto 6px" }} /><div style={{ fontSize: 12, color: C.sub }}>{r[0]}</div></div>
           ))}
@@ -802,14 +817,14 @@ function InsightSheet({ meal, onClose }) {
       </Card>
 
       {concerns.length > 0 && (
-        <Card style={{ padding: 14, marginBottom: 14, background: "#FFFBF2", border: "1px solid #F2E6C7" }}>
+        <Card style={{ padding: 14, marginBottom: 14, background: C.warm, border: "1px solid " + C.border }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 12, letterSpacing: ".04em", color: C.ink }}><AlertTriangle size={15} color="#E0A92E" /> CONCERNING INGREDIENTS</span>
             <span style={{ background: "#F2E6C7", color: "#8a6d1f", fontWeight: 700, fontSize: 11, borderRadius: 99, width: 20, height: 20, display: "grid", placeItems: "center" }}>{concerns.length}</span>
           </div>
           {concerns.map((c, i) => (
             <div key={i} style={{ paddingTop: i ? 10 : 0, marginTop: i ? 10 : 0, borderTop: i ? "1px solid #F2E6C7" : "none" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: C.ink }}><span style={{ width: 8, height: 8, borderRadius: 99, background: levelColor[c.level] || C.sub }} /> {c.name}</span><span style={{ fontSize: 10, fontWeight: 700, color: levelColor[c.level], background: "#fff", border: "1px solid " + (levelColor[c.level] || C.sub) + "66", padding: "3px 8px", borderRadius: 99, textTransform: "uppercase" }}>{c.level}</span></div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: C.ink }}><span style={{ width: 8, height: 8, borderRadius: 99, background: levelColor[c.level] || C.sub }} /> {c.name}</span><span style={{ fontSize: 10, fontWeight: 700, color: levelColor[c.level], background: C.card, border: "1px solid " + (levelColor[c.level] || C.sub) + "66", padding: "3px 8px", borderRadius: 99, textTransform: "uppercase" }}>{c.level}</span></div>
               <div style={{ fontSize: 12, color: C.sub, marginTop: 5, lineHeight: 1.45 }}><b style={{ color: C.ink, fontWeight: 700, fontSize: 10, letterSpacing: ".04em" }}>HEALTH IMPACT</b><br />{c.note}</div>
             </div>
           ))}
@@ -849,8 +864,8 @@ function Paywall({ onSubscribe, onClose }) {
             {features.map((f) => (<div key={f} style={{ display: "flex", alignItems: "center", gap: 11 }}><div style={{ width: 24, height: 24, borderRadius: 8, background: "#FFEDE4", display: "grid", placeItems: "center", flex: "none" }}><Check size={13} color={C.accentDark} strokeWidth={3.4} /></div><span style={{ fontWeight: 500, fontSize: 14, color: C.ink }}>{f}</span></div>))}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={() => setPlan("monthly")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1.5px solid " + (plan === "monthly" ? C.accentDark : "#F0EADF"), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}><div><div style={{ fontWeight: 600, fontSize: 15, color: C.ink }}>Monthly</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Billed every month</div></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>$9.99</div></button>
-            <button onClick={() => setPlan("yearly")} style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "2px solid " + (plan === "yearly" ? C.accentDark : "#F0EADF"), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left", boxShadow: plan === "yearly" ? "0 12px 24px -12px rgba(232,95,48,.4)" : "none" }}>
+            <button onClick={() => setPlan("monthly")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: C.card, border: "1.5px solid " + (plan === "monthly" ? C.accentDark : C.border), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}><div><div style={{ fontWeight: 600, fontSize: 15, color: C.ink }}>Monthly</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>Billed every month</div></div><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.ink }}>$9.99</div></button>
+            <button onClick={() => setPlan("yearly")} style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", background: C.card, border: "2px solid " + (plan === "yearly" ? C.accentDark : C.border), borderRadius: 18, padding: "14px 16px", cursor: "pointer", textAlign: "left", boxShadow: plan === "yearly" ? "0 12px 24px -12px rgba(232,95,48,.4)" : "none" }}>
               <div style={{ position: "absolute", top: -11, left: 16, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", color: "#fff", fontFamily: DISP, fontWeight: 700, fontSize: 10, letterSpacing: ".04em", padding: "4px 10px", borderRadius: 99 }}>BEST VALUE {"\u00b7"} SAVE 75%</div>
               <div><div style={{ fontWeight: 600, fontSize: 15, color: C.ink }}>Yearly</div><div style={{ fontWeight: 500, fontSize: 12, color: C.ink, opacity: .5 }}>$2.50 / month</div></div>
               <div style={{ textAlign: "right" }}><div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 18, color: C.accentDark }}>$29.99</div></div>
@@ -934,7 +949,7 @@ function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg, wee
           <circle cx={end.x} cy={end.y} r="5" fill="#E85F30" stroke="#fff" strokeWidth="2.5" />
         </svg>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontWeight: 500, fontSize: 11, color: C.ink, opacity: .4 }}><span>{weights[0] && weights[0].date}</span><span>{weights[weights.length - 1] && weights[weights.length - 1].date}</span></div>
-        {proj && <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 14, paddingTop: 14, borderTop: "1px solid #F0EADF" }}><span style={{ width: 8, height: 8, borderRadius: 99, background: proj.ok ? "#3E9B57" : C.accentDark, flex: "none" }} /><span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{proj.text}</span></div>}
+        {proj && <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 14, paddingTop: 14, borderTop: "1px solid " + C.border }}><span style={{ width: 8, height: 8, borderRadius: 99, background: proj.ok ? "#3E9B57" : C.accentDark, flex: "none" }} /><span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{proj.text}</span></div>}
       </Card>
 
       <Card style={{ padding: 18, borderRadius: 24, marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
@@ -966,7 +981,7 @@ function ProgressTab({ weights, setWeights, totalCal, log, t, units, goalKg, wee
   );
 }
 
-function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, onWidgets, onReferral, onEditGoals, onLang, units, setUnits }) {
+function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, onWidgets, onReferral, onEditGoals, onLang, units, setUnits, theme, setTheme }) {
   const cur = LANGS.find((l) => l.code === lang);
   return (
     <div style={{ padding: "18px 16px 90px" }}>
@@ -980,7 +995,13 @@ function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, on
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px" }}>
           <span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}><Scale size={18} color={C.sub} /> Units</span>
           <div style={{ display: "flex", gap: 4, background: C.grayBg, borderRadius: 99, padding: 3 }}>
-            {[["metric", "kg/cm"], ["imperial", "lb/in"]].map((s) => (<button key={s[0]} onClick={() => setUnits(s[0])} style={{ border: "none", cursor: "pointer", padding: "5px 12px", borderRadius: 99, fontWeight: 700, fontSize: 12, background: units === s[0] ? "#fff" : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 1px 4px rgba(0,0,0,.08)" : "none" }}>{s[1]}</button>))}
+            {[["metric", "kg/cm"], ["imperial", "lb/in"]].map((s) => (<button key={s[0]} onClick={() => setUnits(s[0])} style={{ border: "none", cursor: "pointer", padding: "5px 12px", borderRadius: 99, fontWeight: 700, fontSize: 12, background: units === s[0] ? C.card : "transparent", color: units === s[0] ? C.ink : C.sub, boxShadow: units === s[0] ? "0 1px 4px rgba(0,0,0,.08)" : "none" }}>{s[1]}</button>))}
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: "1px solid " + C.border }}>
+          <span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18 }}>{theme === "dark" ? "🌙" : "☀️"}</span> Appearance</span>
+          <div style={{ display: "flex", gap: 4, background: C.grayBg, borderRadius: 99, padding: 3 }}>
+            {[["light", "Light"], ["dark", "Dark"]].map((s) => (<button key={s[0]} onClick={() => setTheme(s[0])} style={{ border: "none", cursor: "pointer", padding: "5px 12px", borderRadius: 99, fontWeight: 700, fontSize: 12, background: theme === s[0] ? C.card : "transparent", color: theme === s[0] ? C.ink : C.sub, boxShadow: theme === s[0] ? "0 1px 4px rgba(0,0,0,.08)" : "none" }}>{s[1]}</button>))}
           </div>
         </div>
         <SettingRow label={t.language} action={cur.flag + " " + cur.name} onClick={onLang} icon={<Globe size={18} color={C.sub} />} top />
@@ -988,14 +1009,14 @@ function SettingsTab({ answers, target, macroTargets, pro, lang, t, onUpsell, on
         <SettingRow label={t.invite} action={"\u203A"} onClick={onReferral} top />
       </Card>
       <Card style={{ overflow: "hidden" }}>
-        {[[t.goal, answers.goal || "-"], [t.sex, answers.sex || "-"], [t.activity, answers.activity || "-"], [t.pace, answers.pace || "-"]].map((row, i) => (<div key={row[0]} style={{ display: "flex", justifyContent: "space-between", padding: "16px 18px", borderTop: i ? "1px solid #F0EADF" : "none" }}><span style={{ color: C.sub }}>{row[0]}</span><span style={{ color: C.ink, fontWeight: 600 }}>{row[1]}</span></div>))}
+        {[[t.goal, answers.goal || "-"], [t.sex, answers.sex || "-"], [t.activity, answers.activity || "-"], [t.pace, answers.pace || "-"]].map((row, i) => (<div key={row[0]} style={{ display: "flex", justifyContent: "space-between", padding: "16px 18px", borderTop: i ? "1px solid " + C.border : "none" }}><span style={{ color: C.sub }}>{row[0]}</span><span style={{ color: C.ink, fontWeight: 600 }}>{row[1]}</span></div>))}
       </Card>
       <div style={{ fontSize: 12, color: C.sub, textAlign: "center", padding: "14px 20px" }}>Nibbl does not provide medical advice and is not a substitute for consulting a physician.</div>
     </div>
   );
 }
 function SettingRow({ label, action, onClick, top, icon }) {
-  return <button onClick={onClick} style={{ width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderTop: top ? "1px solid #F0EADF" : "none" }}><span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}>{icon}{label}</span><span style={{ color: C.accent, fontWeight: 700 }}>{action}</span></button>;
+  return <button onClick={onClick} style={{ width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderTop: top ? "1px solid " + C.border : "none" }}><span style={{ color: C.ink, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}>{icon}{label}</span><span style={{ color: C.accent, fontWeight: 700 }}>{action}</span></button>;
 }
 
 function Phone({ children }) {
@@ -1013,7 +1034,7 @@ function Phone({ children }) {
   return (
     <div style={{ minHeight: "100vh", background: "#111", display: "grid", placeItems: "center", padding: 12, fontFamily: BODY }}>
       <div style={{ width: 390, height: 844, background: "#000", borderRadius: 46, padding: 8, boxShadow: "0 40px 80px -28px rgba(27,42,42,.45), 0 14px 30px rgba(27,42,42,.16)" }}>
-        <div style={{ width: "100%", height: "100%", background: "#fff", borderRadius: 40, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative", fontFamily: BODY }}>{children}</div>
+        <div style={{ width: "100%", height: "100%", background: C.cream, borderRadius: 40, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative", fontFamily: BODY }}>{children}</div>
       </div>
     </div>
   );
@@ -1021,7 +1042,7 @@ function Phone({ children }) {
 function Sheet({ children, onClose, title, sub }) {
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "flex-end", zIndex: 30 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", borderRadius: "26px 26px 0 0", padding: "16px 18px 28px", maxHeight: "85%", overflowY: "auto" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, width: "100%", borderRadius: "26px 26px 0 0", padding: "16px 18px 28px", maxHeight: "85%", overflowY: "auto" }}>
         <div style={{ width: 40, height: 5, background: "#D8D8DE", borderRadius: 99, margin: "0 auto 16px" }} />
         {title && <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 20, color: C.ink, marginBottom: sub ? 4 : 16 }}>{title}</div>}
         {sub && <div style={{ color: C.sub, fontSize: 14, marginBottom: 18 }}>{sub}</div>}
@@ -1030,7 +1051,7 @@ function Sheet({ children, onClose, title, sub }) {
     </div>
   );
 }
-function Card({ children, style }) { return <div style={{ background: "#fff", borderRadius: 22, border: "1px solid " + C.border, boxShadow: "0 4px 18px -6px rgba(27,42,42,.08)", ...style }}>{children}</div>; }
+function Card({ children, style }) { return <div style={{ background: C.card, borderRadius: 22, border: "1px solid " + C.border, boxShadow: "0 4px 18px -6px rgba(27,42,42,.08)", ...style }}>{children}</div>; }
 function MacroCard({ value, color, icon, label, t }) {
   const over = value < 0;
   return <Card style={{ padding: 14, textAlign: "center" }}><div style={{ fontWeight: 700, fontSize: 17, color: C.ink, marginBottom: 8 }}>{Math.abs(value)}g</div><div style={{ width: 52, height: 52, margin: "0 auto", borderRadius: 99, border: "3px solid " + color, display: "grid", placeItems: "center" }}>{icon}</div><div style={{ fontSize: 12, color: C.sub, marginTop: 8 }}>{label} {over ? t.over : t.left}</div></Card>;
@@ -1040,8 +1061,8 @@ function Ring({ pct, children, size, over }) {
   const r = size / 2 - 6; const c = 2 * Math.PI * r;
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EDEDED" strokeWidth="6" /><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.ink} strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 1))} /></svg>
-      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: over ? C.ink : "transparent", borderRadius: 99, margin: 12 }}>{children}</div>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.ringTrack} strokeWidth="6" /><circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.ink} strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 1))} /></svg>
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: over ? INK : "transparent", borderRadius: 99, margin: 12 }}>{children}</div>
     </div>
   );
 }
@@ -1051,7 +1072,7 @@ function GradientRing({ pct, value, label, over }) {
   return (
     <div style={{ position: "relative", width: size, height: size, flex: "none" }}>
       <svg width={size} height={size} viewBox={"0 0 " + size + " " + size}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F0E8DA" strokeWidth={sw} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.ringTrack} strokeWidth={sw} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={over ? C.protein : "url(#nibblCoral)"} strokeWidth={sw} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 1))} transform={"rotate(-90 " + size / 2 + " " + size / 2 + ")"} />
         <defs><linearGradient id="nibblCoral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={C.accentLight} /><stop offset="1" stopColor={C.accentDark} /></linearGradient></defs>
       </svg>
@@ -1079,7 +1100,7 @@ function TabBar({ tab, setTab, t, onScan, onCoach }) {
     <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "grid", placeItems: "center", padding: 4 }}><Icon size={24} color={tab === k ? C.accent : "#B7AE9E"} strokeWidth={2.2} /></button>
   );
   return (
-    <div style={{ position: "absolute", bottom: 18, left: 18, right: 18, background: "#fff", border: "1px solid " + C.border, borderRadius: 26, boxShadow: "0 10px 30px -8px rgba(27,42,42,.22)", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
+    <div style={{ position: "absolute", bottom: 18, left: 18, right: 18, background: C.card, border: "1px solid " + C.border, borderRadius: 26, boxShadow: "0 10px 30px -8px rgba(27,42,42,.22)", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
       <Item k="home" Icon={Home} onClick={() => setTab("home")} />
       <Item k="progress" Icon={BarChart3} onClick={() => setTab("progress")} />
       <button onClick={onScan} style={{ width: 52, height: 52, borderRadius: 18, background: "linear-gradient(135deg,#FF7A4D,#E85F30)", border: "none", boxShadow: "0 8px 16px -4px rgba(232,95,48,.55)", display: "grid", placeItems: "center", cursor: "pointer", marginTop: -22 }}><Camera size={24} color="#fff" strokeWidth={2.2} /></button>
