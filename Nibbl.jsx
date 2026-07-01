@@ -202,6 +202,10 @@ export default function Nibbl() {
   const [units, setUnits] = useState(SAVED.units || "metric");
   const [theme, setTheme] = useState(SAVED.theme || "light");
   const [exSource, setExSource] = useState(SAVED.exSource || null);
+  const [exAuto, setExAuto] = useState(SAVED.exAuto || false);
+  const [exFeedIdx, setExFeedIdx] = useState(SAVED.exFeedIdx || 0);
+  const [exLastSync, setExLastSync] = useState(SAVED.exLastSync || 0);
+  const exIdxRef = React.useRef(SAVED.exFeedIdx || 0);
   applyTheme(theme);
   const t = T[lang];
   const rtl = lang === "AR";
@@ -222,6 +226,23 @@ export default function Nibbl() {
   const setLog = (fn) => setLogsByDay((m) => ({ ...m, [dayOffset]: fn(m[dayOffset] || []) }));
   const setWater = (n) => setWaterByDay((m) => ({ ...m, [dayOffset]: Math.max(0, n) }));
   const addExercise = (e) => setExByDay((m) => ({ ...m, [dayOffset]: [{ ...e, id: Date.now() }, ...(m[dayOffset] || [])] }));
+  const addExerciseToday = (e) => setExByDay((m) => ({ ...m, 0: [{ ...e, id: Date.now() + Math.floor(Math.random() * 1000), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }, ...(m[0] || [])] }));
+  const connectSource = (src) => { exIdxRef.current = 0; setExFeedIdx(0); setExSource(src); setExAuto(true); };
+  const disconnectSource = () => { setExAuto(false); setExSource(null); };
+  const syncNow = () => { if (!exSource) return; const feed = SYNC_WORKOUTS[exSource] || []; const w = feed[Math.floor(Math.random() * feed.length)]; if (w) { addExerciseToday({ name: w[0], calories: w[2], auto: true }); setExLastSync(Date.now()); } };
+  React.useEffect(() => {
+    if (!exSource || !exAuto) return;
+    const pull = () => {
+      const feed = SYNC_WORKOUTS[exSource] || [];
+      if (exIdxRef.current >= feed.length) return;
+      const w = feed[exIdxRef.current];
+      exIdxRef.current += 1; setExFeedIdx(exIdxRef.current);
+      addExerciseToday({ name: w[0], calories: w[2], auto: true }); setExLastSync(Date.now());
+    };
+    pull();
+    const iv = setInterval(pull, 9000);
+    return () => clearInterval(iv);
+  }, [exSource, exAuto]);
 
   const [weights, setWeights] = useState(SAVED.weights || [{ date: "6/19", kg: 60.0 }, { date: "6/21", kg: 63.0 }]);
   const consumed = log.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein, c: a.c + m.carbs, f: a.f + m.fat, fb: a.fb + (m.fiber || 0), na: a.na + (m.sodium || 0) }), { cal: 0, p: 0, c: 0, f: 0, fb: 0, na: 0 });
@@ -235,7 +256,7 @@ export default function Nibbl() {
 
   const [recents, setRecents] = useState(SAVED.recents || []);
   React.useEffect(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ screen, answers, goals, units, lang, theme, exSource, pro, logsByDay, waterByDay, exByDay, savedMeals, recents, weights })); } catch (e) {}
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ screen, answers, goals, units, lang, theme, exSource, exAuto, exFeedIdx, exLastSync, pro, logsByDay, waterByDay, exByDay, savedMeals, recents, weights })); } catch (e) {}
   });
   const FREE_LIMIT = 3;
   const addMeal = (m) => {
@@ -327,7 +348,7 @@ export default function Nibbl() {
         {scanner && <Scanner onClose={() => setScanner(false)} onAddMeal={addMeal} onSearch={() => { setScanner(false); setSheet("search"); }} t={t} />}
         {sheet === "search" && <SearchSheet onClose={() => setSheet(null)} onPick={(m) => { addMeal(m); setSheet(null); }} savedMeals={savedMeals} isSaved={isSaved} onToggleSave={toggleSaved} t={t} recents={recents} onNewRecipe={() => setSheet("recipe")} />}
         {sheet === "recipe" && <RecipeSheet onClose={() => setSheet(null)} onSave={(r) => { setSavedMeals((l) => [r, ...l.filter((x) => x.name !== r.name)]); setSheet(null); }} />}
-        {sheet === "exercise" && <ExerciseSheet onClose={() => setSheet(null)} onAdd={(e) => addExercise(e)} source={exSource} onConnect={setExSource} />}
+        {sheet === "exercise" && <ExerciseSheet onClose={() => setSheet(null)} onAdd={(e) => addExercise(e)} source={exSource} auto={exAuto} setAuto={setExAuto} lastSync={exLastSync} onConnect={connectSource} onDisconnect={disconnectSource} onSyncNow={syncNow} />}
         {sheet === "recap" && <RecapSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} burned={burned} />}
         {sheet === "coach" && <CoachSheet onClose={() => setSheet(null)} consumed={consumed} target={target} macroTargets={macroTargets} />}
         {sheet === "referral" && <ReferralSheet onClose={() => setSheet(null)} />}
@@ -719,21 +740,15 @@ const SYNC_WORKOUTS = {
   "Garmin": [["Trail run", "🏃", 520, "7.4 km"], ["Ride", "🚴", 430, "18 km"], ["Swim", "🏊", 300, "1,500 m"]],
   "Strava": [["Long run", "🏃", 610, "9.1 km"], ["Group ride", "🚴", 480, "22 km"], ["Yoga", "🧘", 110, "40 min"]],
 };
-function ExerciseSheet({ onClose, onAdd, source, onConnect }) {
-  const [mode, setMode] = useState("log");
+function ExerciseSheet({ onClose, onAdd, source, auto, setAuto, lastSync, onConnect, onDisconnect, onSyncNow }) {
+  const [mode, setMode] = useState(source ? "sync" : "log");
   const [sel, setSel] = useState(0); const [min, setMin] = useState(30);
   const cal = Math.round(EX_PRESETS[sel][2] * min);
-  const [src, setSrc] = useState(source || null);
-  const [status, setStatus] = useState(source ? "done" : "idle"); // idle | syncing | done
-  const [added, setAdded] = useState({});
-  const workouts = src ? SYNC_WORKOUTS[src] : [];
-  const sync = (s) => { setSrc(s); setStatus("syncing"); setAdded({}); setTimeout(() => setStatus("done"), 800); };
-  const importOne = (w, i) => { onAdd({ name: w[0], calories: w[2] }); onConnect(src); setAdded((a) => ({ ...a, [i]: true })); };
-  const importAll = () => { workouts.forEach((w, i) => { if (!added[i]) onAdd({ name: w[0], calories: w[2] }); }); onConnect(src); onClose(); };
+  const ago = lastSync ? (() => { const s = Math.round((Date.now() - lastSync) / 1000); return s < 60 ? "just now" : s < 3600 ? Math.floor(s / 60) + "m ago" : Math.floor(s / 3600) + "h ago"; })() : "—";
   return (
     <Sheet onClose={onClose} title="Add exercise">
       <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
-        {[["log", "Log workout"], ["sync", "Sync from app"]].map((s) => (<button key={s[0]} onClick={() => setMode(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: mode === s[0] ? INK : C.grayBg, color: mode === s[0] ? "#fff" : C.ink }}>{s[1]}</button>))}
+        {[["log", "Log workout"], ["sync", "Auto-sync"]].map((s) => (<button key={s[0]} onClick={() => setMode(s[0])} style={{ flex: 1, border: "none", cursor: "pointer", padding: "9px 0", borderRadius: 12, fontWeight: 700, fontSize: 13, background: mode === s[0] ? INK : C.grayBg, color: mode === s[0] ? "#fff" : C.ink }}>{s[1]}</button>))}
       </div>
 
       {mode === "log" && (<>
@@ -747,23 +762,24 @@ function ExerciseSheet({ onClose, onAdd, source, onConnect }) {
       </>)}
 
       {mode === "sync" && (<>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>{EX_SOURCES.map((s) => (<button key={s[0]} onClick={() => sync(s[0])} style={{ display: "flex", alignItems: "center", gap: 7, border: "1.5px solid " + (src === s[0] ? C.accent : C.border), background: src === s[0] ? C.warm : C.card, color: C.ink, cursor: "pointer", padding: "9px 12px", borderRadius: 13, fontWeight: 700, fontSize: 13 }}><span style={{ fontSize: 16 }}>{s[1]}</span>{s[0]}</button>))}</div>
-        {status === "idle" && <div style={{ color: C.sub, fontSize: 13, textAlign: "center", padding: "18px 10px" }}>Choose a source to sync recent workouts.</div>}
-        {status === "syncing" && <div style={{ color: C.sub, fontSize: 14, textAlign: "center", padding: "18px 10px" }}>Syncing from {src}…</div>}
-        {status === "done" && (<>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}><span style={{ fontWeight: 700, fontSize: 13, color: C.ink }}>Recent from {src}</span><button onClick={() => sync(src)} style={{ border: "none", background: "transparent", color: C.accent, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>↻ Refresh</button></div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-            {workouts.map((w, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, border: "1px solid " + C.border, background: C.card, borderRadius: 12, padding: 12 }}>
-                <span style={{ fontSize: 22 }}>{w[1]}</span>
-                <div style={{ flex: 1 }}><div style={{ fontWeight: 600, color: C.ink }}>{w[0]}</div><div style={{ fontSize: 12, color: C.sub }}>{w[3]} {"·"} {w[2]} cal</div></div>
-                {added[i] ? <Check size={20} color="#3E9B57" /> : <button onClick={() => importOne(w, i)} style={{ border: "none", background: C.accent, color: "#fff", borderRadius: 99, width: 30, height: 30, display: "grid", placeItems: "center", cursor: "pointer" }}><Plus size={18} /></button>}
-              </div>
-            ))}
-          </div>
-          <button onClick={importAll} style={{ width: "100%", background: C.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Import all from {src}</button>
-        </>)}
-        <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 14 }}>Demo sync. Live Apple Health / Google Fit / wearable import needs native device APIs.</div>
+        <div style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>{source ? "Connected — workouts import automatically." : "Connect a source to import workouts automatically."}</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>{EX_SOURCES.map((s) => (<button key={s[0]} onClick={() => onConnect(s[0])} style={{ display: "flex", alignItems: "center", gap: 7, border: "1.5px solid " + (source === s[0] ? C.accent : C.border), background: source === s[0] ? C.warm : C.card, color: C.ink, cursor: "pointer", padding: "9px 12px", borderRadius: 13, fontWeight: 700, fontSize: 13 }}><span style={{ fontSize: 16 }}>{s[1]}</span>{s[0]}</button>))}</div>
+        {source && (
+          <Card style={{ padding: 16, marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: C.ink }}><span style={{ width: 9, height: 9, borderRadius: 99, background: auto ? "#3E9B57" : C.sub }} /> Auto-sync</span>
+              <button onClick={() => setAuto(!auto)} style={{ width: 46, height: 26, borderRadius: 99, border: "none", cursor: "pointer", background: auto ? C.accent : C.border, position: "relative" }}><span style={{ position: "absolute", top: 3, left: auto ? 23 : 3, width: 20, height: 20, borderRadius: 99, background: "#fff", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} /></button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+              <span style={{ fontSize: 12, color: C.sub }}>{auto ? "New workouts from " + source + " sync in automatically." : "Auto-sync paused."} Last synced {ago}.</span>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+              <button onClick={onSyncNow} style={{ flex: 1, background: C.grayBg, color: C.ink, border: "none", borderRadius: 12, padding: 12, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Sync now</button>
+              <button onClick={onDisconnect} style={{ background: "transparent", color: C.protein, border: "1px solid " + C.border, borderRadius: 12, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Disconnect</button>
+            </div>
+          </Card>
+        )}
+        <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginTop: 6 }}>Demo auto-sync. Live Apple Health / Google Fit / wearable sync needs native device APIs.</div>
       </>)}
     </Sheet>
   );
